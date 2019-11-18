@@ -1,0 +1,28 @@
+# Ignore Gradle project-specific cache directory
+.gradle
+bin
+
+# Ignore Gradle build output directory
+build
+
+# Ignore Gradle properties
+gradle.properties
+
+# Ignore VS Code settings
+.vscode
+
+# Ignore Eclipse settings
+.settings
+
+# Ignore Log folders
+logs
+log
+
+# Ignore Library files
+*.dll
+*.so
+!lib/**/*.dll
+!lib/**/*.so
+
+# Ignore CTP files
+*.con
