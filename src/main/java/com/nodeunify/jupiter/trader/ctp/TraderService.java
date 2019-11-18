@@ -3,7 +3,9 @@ package com.nodeunify.jupiter.trader.ctp;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
 import ctp.thosttraderapi.CThostFtdcInstrumentField;
@@ -20,12 +22,16 @@ import ctp.thosttraderapi.THOST_TE_RESUME_TYPE;
 @Service
 public class TraderService {
     private CThostFtdcTraderApi traderApi;
+
     private final static String ctp1_TradeAddress = "tcp://180.168.146.187:10130";
 
     static{
 		System.loadLibrary("thosttraderapi_se");
 		System.loadLibrary("thosttraderapi_wrap");
     }
+
+    @Autowired
+    private KafkaTemplate<String, String> kafkaTemplate;
     
     @PostConstruct
     public void postConstruct() {
@@ -139,6 +145,7 @@ public class TraderService {
                 System.out.printf("%s\n",pInstrument.getDeliveryYear());
                 System.out.printf("%s\n",pInstrument.getStartDelivDate());
                 System.out.printf("%s\n",pInstrument.getEndDelivDate());
+                kafkaTemplate.send("", pInstrument.getInstrumentID());
             }
             else
             {
