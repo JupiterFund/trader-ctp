@@ -24,7 +24,10 @@ import ctp.thosttraderapi.THOST_TE_RESUME_TYPE;
 public class TraderService {
     private CThostFtdcTraderApi traderApi;
 
+    // SimNow
     private final static String ctp1_TradeAddress = "tcp://180.168.146.187:10130";
+    // Prod
+    // private final static String ctp1_TradeAddress = "tcp://180.166.132.67:41205";
 
     static{
 		System.loadLibrary("thosttraderapi_se");
@@ -56,6 +59,7 @@ public class TraderService {
     }
 
     class TraderSpiImpl extends CThostFtdcTraderSpi {
+        // SimNow
         final static String m_BrokerId = "9999";
         final static String m_UserId = "012798";
         final static String m_PassWord = "123456"; 
@@ -65,6 +69,16 @@ public class TraderService {
         final static String m_CurrencyId = "CNY";
         final static String m_AppId = "simnow_client_test";
         final static String m_AuthCode = "0000000000000000";
+        // Prod
+        // final static String m_BrokerId = "6000";
+        // final static String m_UserId = "00303386";
+        // final static String m_PassWord = "miyuan38"; 
+        // final static String m_InvestorId = "00303386";
+        // final static String m_TradingDay = "20181122";
+        // final static String m_AccountId = "00303386";
+        // final static String m_CurrencyId = "CNY";
+        // final static String m_AppId = "client_juno_1.0.0";
+        // final static String m_AuthCode = "AQJMBGYKDIHX8IZW";
 
         TraderSpiImpl() { }
 
@@ -145,7 +159,7 @@ public class TraderService {
                 // System.out.printf("%s\n",pInstrument.getDeliveryYear());
                 // System.out.printf("%s\n",pInstrument.getStartDelivDate());
                 // System.out.printf("%s\n", pInstrument.getEndDelivDate());
-                kafkaTemplate.send(new ProducerRecord<String, String>("test.instrument", pInstrument.getInstrumentID()));
+                kafkaTemplate.send(new ProducerRecord<String, String>("test.ctp.instruments", pInstrument.getInstrumentID()));
             }
             else
             {
