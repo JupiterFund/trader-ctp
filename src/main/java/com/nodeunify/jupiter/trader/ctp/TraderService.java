@@ -3,6 +3,7 @@ package com.nodeunify.jupiter.trader.ctp;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 
+import org.apache.kafka.clients.producer.ProducerRecord;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -136,16 +137,15 @@ public class TraderService {
             }
             if (pInstrument != null)
             {
-                System.out.println("******************");
                 System.out.printf("%s\n",pInstrument.getInstrumentID());
-                System.out.printf("%s\n",pInstrument.getCreateDate());
-                System.out.printf("%s\n",pInstrument.getOpenDate());
-                System.out.printf("%s\n",pInstrument.getExpireDate());
-                System.out.printf("%s\n",pInstrument.getDeliveryMonth());
-                System.out.printf("%s\n",pInstrument.getDeliveryYear());
-                System.out.printf("%s\n",pInstrument.getStartDelivDate());
-                System.out.printf("%s\n",pInstrument.getEndDelivDate());
-                kafkaTemplate.send("", pInstrument.getInstrumentID());
+                // System.out.printf("%s\n",pInstrument.getCreateDate());
+                // System.out.printf("%s\n",pInstrument.getOpenDate());
+                // System.out.printf("%s\n",pInstrument.getExpireDate());
+                // System.out.printf("%s\n",pInstrument.getDeliveryMonth());
+                // System.out.printf("%s\n",pInstrument.getDeliveryYear());
+                // System.out.printf("%s\n",pInstrument.getStartDelivDate());
+                // System.out.printf("%s\n", pInstrument.getEndDelivDate());
+                kafkaTemplate.send(new ProducerRecord<String, String>("test.instrument", pInstrument.getInstrumentID()));
             }
             else
             {
