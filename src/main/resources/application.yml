@@ -25,14 +25,13 @@ app:
   ctp:
     ip: 180.168.146.187
     port: 10130
-    active: true
+    broker-id: 9999
+    app-id: simnow_client_test
     username: ENC(zKBo0JcnUim01LCH5Z9f9Q==)
     password: ENC(y6XhoIa5zT+XvXdjHMXmeA==)
     investor-id: ENC(kMaVQtJCACwzBKVRJi18kw==)
     account-id: ENC(10a/II0RKXDEJHAzLYJszA==)
-    app-id: simnow_client_test
     auth-code: ENC(inaGwoVJN/20FF8tDexDgBzsn6OM7ZNtL6VIRmAdWeE=)
-    broker-id: 9999
 jasypt:
   encryptor:
     password: ${JASYPT_ENCRYPTOR_PASSWORD:}
