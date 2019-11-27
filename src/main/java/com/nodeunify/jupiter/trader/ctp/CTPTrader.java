@@ -81,19 +81,9 @@ public class CTPTrader {
     class TraderSpiImpl extends CThostFtdcTraderSpi {
         final static String m_TradingDay = "20181122";
         final static String m_CurrencyId = "CNY";
-        // Prod
-        // final static String m_BrokerId = "6000";
-        // final static String m_UserId = "00303386";
-        // final static String m_PassWord = "miyuan38"; 
-        // final static String m_InvestorId = "00303386";
-        // final static String m_TradingDay = "20181122";
-        // final static String m_AccountId = "00303386";
-        // final static String m_CurrencyId = "CNY";
-        // final static String m_AppId = "client_juno_1.0.0";
-        // final static String m_AuthCode = "AQJMBGYKDIHX8IZW";
 
         TraderSpiImpl() { }
-
+        
         @Override
         public void OnFrontConnected() {
             log.debug("On Front Connected");
