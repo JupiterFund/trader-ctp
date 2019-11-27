@@ -5,7 +5,8 @@ import javax.annotation.PreDestroy;
 
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.beans.factory.annotation.Value;
+// import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
@@ -19,30 +20,47 @@ import ctp.thosttraderapi.CThostFtdcRspUserLoginField;
 import ctp.thosttraderapi.CThostFtdcTraderApi;
 import ctp.thosttraderapi.CThostFtdcTraderSpi;
 import ctp.thosttraderapi.THOST_TE_RESUME_TYPE;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
-public class TraderService {
+public class CTPTrader {
     private CThostFtdcTraderApi traderApi;
-
-    // SimNow
-    private final static String ctp1_TradeAddress = "tcp://180.168.146.187:10130";
     // Prod
     // private final static String ctp1_TradeAddress = "tcp://180.166.132.67:41205";
+
+    @Autowired
+    private KafkaTemplate<String, String> kafkaTemplate;
+    @Value("#{'tcp://' + '${app.ctp.ip}' + ':' + '${app.ctp.port}'}")
+    private String ctpTradeAddress;
+    @Value("${app.ctp.username}")
+    private String userId;
+    @Value("${app.ctp.password}")
+    private String password;
+    @Value("${app.ctp.investor-id}")
+    private String investorId;
+    @Value("${app.ctp.account-id}")
+    private String accountId;
+    @Value("${app.ctp.app-id}")
+    private String appId;
+    @Value("${app.ctp.auth-code}")
+    private String authCode;
+    @Value("${app.ctp.broker-id}")
+    private String brokerId;
+    @Value("${spring.kafka.topic.instrument}")
+    private String topic;
 
     static{
 		System.loadLibrary("thosttraderapi_se");
 		System.loadLibrary("thosttraderapi_wrap");
     }
-
-    @Autowired
-    private KafkaTemplate<String, String> kafkaTemplate;
     
     @PostConstruct
     public void postConstruct() {
         traderApi = CThostFtdcTraderApi.CreateFtdcTraderApi("trade");
         TraderSpiImpl traderSpi = new TraderSpiImpl();
         traderApi.RegisterSpi(traderSpi);
-		traderApi.RegisterFront(ctp1_TradeAddress);
+		traderApi.RegisterFront(ctpTradeAddress);
 		traderApi.SubscribePublicTopic(THOST_TE_RESUME_TYPE.THOST_TERT_QUICK);
 		traderApi.SubscribePrivateTopic(THOST_TE_RESUME_TYPE.THOST_TERT_QUICK);
         traderApi.Init();
@@ -51,24 +69,18 @@ public class TraderService {
     
     @PreDestroy
     public void preDestroy() {
+        traderApi.Release();
     }
 
-    @KafkaListener(topics = "test")
-    public void listenSignal(String payload) {
+    // TODO: to be used for listening signal in the future
+    // @KafkaListener(topics = "test")
+    // public void listenSignal(String payload) {
 
-    }
+    // }
 
     class TraderSpiImpl extends CThostFtdcTraderSpi {
-        // SimNow
-        final static String m_BrokerId = "9999";
-        final static String m_UserId = "012798";
-        final static String m_PassWord = "123456"; 
-        final static String m_InvestorId = "012798";
         final static String m_TradingDay = "20181122";
-        final static String m_AccountId = "012798";
         final static String m_CurrencyId = "CNY";
-        final static String m_AppId = "simnow_client_test";
-        final static String m_AuthCode = "0000000000000000";
         // Prod
         // final static String m_BrokerId = "6000";
         // final static String m_UserId = "00303386";
@@ -83,13 +95,13 @@ public class TraderService {
         TraderSpiImpl() { }
 
         @Override
-        public void OnFrontConnected(){
-            System.out.println("On Front Connected");
+        public void OnFrontConnected() {
+            log.debug("On Front Connected");
             CThostFtdcReqAuthenticateField field = new CThostFtdcReqAuthenticateField();
-            field.setBrokerID(m_BrokerId);
-            field.setUserID(m_UserId);
-            field.setAppID(m_AppId);
-            field.setAuthCode(m_AuthCode);
+            field.setBrokerID(brokerId);
+            field.setUserID(userId);
+            field.setAppID(appId);
+            field.setAuthCode(authCode);
             traderApi.ReqAuthenticate(field, 0);
             System.out.println("Send ReqAuthenticate ok");
         }
@@ -97,17 +109,15 @@ public class TraderService {
         @Override
         public void OnRspAuthenticate(CThostFtdcRspAuthenticateField pRspAuthenticateField, CThostFtdcRspInfoField pRspInfo, int nRequestID, boolean bIsLast) 
         {
-            if (pRspInfo != null && pRspInfo.getErrorID() != 0)
-            {
+            if (pRspInfo != null && pRspInfo.getErrorID() != 0) {
                 System.out.printf("Login ErrorID[%d] ErrMsg[%s]\n", pRspInfo.getErrorID(), pRspInfo.getErrorMsg());
-
                 return;
             }
             System.out.println("OnRspAuthenticate success!!!");
             CThostFtdcReqUserLoginField field = new CThostFtdcReqUserLoginField();
-            field.setBrokerID(m_BrokerId);
-            field.setUserID(m_UserId);
-            field.setPassword(m_PassWord);
+            field.setBrokerID(brokerId);
+            field.setUserID(userId);
+            field.setPassword(password);
             traderApi.ReqUserLogin(field,0);
             System.out.println("Send login ok");
         }
@@ -115,13 +125,11 @@ public class TraderService {
         @Override
         public void OnRspUserLogin(CThostFtdcRspUserLoginField pRspUserLogin, CThostFtdcRspInfoField pRspInfo, int nRequestID, boolean bIsLast)
         {
-            if (pRspInfo != null && pRspInfo.getErrorID() != 0)
-            {
+            if (pRspInfo != null && pRspInfo.getErrorID() != 0) {
                 System.out.printf("Login ErrorID[%d] ErrMsg[%s]\n", pRspInfo.getErrorID(), pRspInfo.getErrorMsg());
-
                 return;
             }
-            System.out.println("Login success!!!");
+            log.debug("Login success!!!");
             // CThostFtdcQryTradingAccountField qryTradingAccount = new CThostFtdcQryTradingAccountField();
             // qryTradingAccount.setBrokerID(m_BrokerId);
             // qryTradingAccount.setCurrencyID(m_CurrencyId);;
@@ -138,31 +146,20 @@ public class TraderService {
             
             CThostFtdcQryInstrumentField qryInstr = new CThostFtdcQryInstrumentField();
             traderApi.ReqQryInstrument(qryInstr, 1);
-            System.out.println("Query success!!!");
+            log.debug("Query success!!!");
         }
 
         @Override
         public void OnRspQryInstrument(CThostFtdcInstrumentField pInstrument, CThostFtdcRspInfoField pRspInfo, int nRequestID, boolean bIsLast)
         {
-            if (pRspInfo != null && pRspInfo.getErrorID() != 0)
-            {
+            if (pRspInfo != null && pRspInfo.getErrorID() != 0) {
                 System.out.printf("OnRspQryInstrument ErrorID[%d] ErrMsg[%s]\n", pRspInfo.getErrorID(), pRspInfo.getErrorMsg());
                 return;
             }
-            if (pInstrument != null)
-            {
+            if (pInstrument != null) {
                 System.out.printf("%s\n",pInstrument.getInstrumentID());
-                // System.out.printf("%s\n",pInstrument.getCreateDate());
-                // System.out.printf("%s\n",pInstrument.getOpenDate());
-                // System.out.printf("%s\n",pInstrument.getExpireDate());
-                // System.out.printf("%s\n",pInstrument.getDeliveryMonth());
-                // System.out.printf("%s\n",pInstrument.getDeliveryYear());
-                // System.out.printf("%s\n",pInstrument.getStartDelivDate());
-                // System.out.printf("%s\n", pInstrument.getEndDelivDate());
-                kafkaTemplate.send(new ProducerRecord<String, String>("test.ctp.instruments", pInstrument.getInstrumentID()));
-            }
-            else
-            {
+                kafkaTemplate.send(new ProducerRecord<String, String>(topic, pInstrument.getInstrumentID()));
+            } else {
                 System.out.printf("NULL obj\n");
             }
         }
