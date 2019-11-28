@@ -20,7 +20,7 @@ spring:
       value-deserializer: org.apache.kafka.common.serialization.ByteArrayDeserializer
     topic:
       signal: trader.ctp.signal
-      instrument: trader.ctp.instruments
+      instrument: trader.ctp.instrument
 app:
   ctp:
     ip: 180.168.146.187
