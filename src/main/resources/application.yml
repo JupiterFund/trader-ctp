@@ -4,23 +4,45 @@ spring:
   main:
     web-application-type: none
   kafka:
-    bootstrap-servers: 127.0.0.1:9092
+    bootstrap-servers: ${BOOTSTRAP_SERVERS:127.0.0.1:9092}
     producer:
       retries: 0
+      # Config batch-size for better latency
       batch-size: 16384
       buffer-memory: 33554432
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
-      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.ByteArraySerializer
       properties:
         linger.ms: 1
     consumer:
-      group-id: postman
-      auto-offset-reset: earliest
+      group-id: trader-ctp
+      auto-offset-reset: latest
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.apache.kafka.common.serialization.ByteArrayDeserializer
     topic:
-      signal: trader.ctp.signal
-      instrument: trader.ctp.instrument
+      trader:
+        ctp:
+          qry:
+            instrument: trader.ctp.qry.instrument
+            investor-position: trader.ctp.qry.investor-position
+            trading-account: trader.ctp.qry.trading-account
+            order: trader.ctp.qry.order
+          order:
+            insert: trader.ctp.order.insert
+            action: trader.ctp.order.action
+          rsp:
+            instrument: trader.ctp.response.instrument
+            investor-position: trader.ctp.response.investor-position
+            trading-account: trader.ctp.response.trading-account
+            order: trader.ctp.rsp.order
+            trade: trader.ctp.rsp.trade
+          rtn:
+            order: trader.ctp.rtn.order
+            trade: trader.ctp.rtn.trade
+          err:
+            order:
+              insert: trader.ctp.err.order.insert
+              action: trader.ctp.err.order.action
 app:
   ctp:
     ip: 180.168.146.187
@@ -32,6 +54,8 @@ app:
     investor-id: ENC(kMaVQtJCACwzBKVRJi18kw==)
     account-id: ENC(10a/II0RKXDEJHAzLYJszA==)
     auth-code: ENC(inaGwoVJN/20FF8tDexDgBzsn6OM7ZNtL6VIRmAdWeE=)
+  trader:
+    id: 1000
 jasypt:
   encryptor:
     password: ${JASYPT_ENCRYPTOR_PASSWORD:}

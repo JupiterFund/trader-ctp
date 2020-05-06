@@ -1,38 +1,52 @@
 package com.nodeunify.jupiter.trader.ctp;
 
-import javax.annotation.PostConstruct;
+import java.util.concurrent.CompletableFuture;
+
 import javax.annotation.PreDestroy;
 
-import org.apache.kafka.clients.producer.ProducerRecord;
+import com.nodeunify.jupiter.trader.ctp.impl.CTPTraderApi;
+import com.nodeunify.jupiter.trader.ctp.impl.CTPTraderSpi;
+import com.nodeunify.jupiter.trader.ctp.impl.CTPTraderSpiAdapter;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-// import org.springframework.kafka.annotation.KafkaListener;
-import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.kafka.config.KafkaListenerEndpointRegistry;
 import org.springframework.stereotype.Service;
 
 import ctp.thosttraderapi.CThostFtdcInstrumentField;
 import ctp.thosttraderapi.CThostFtdcQryInstrumentField;
+import ctp.thosttraderapi.CThostFtdcQrySettlementInfoField;
 import ctp.thosttraderapi.CThostFtdcReqAuthenticateField;
 import ctp.thosttraderapi.CThostFtdcReqUserLoginField;
 import ctp.thosttraderapi.CThostFtdcRspAuthenticateField;
-import ctp.thosttraderapi.CThostFtdcRspInfoField;
 import ctp.thosttraderapi.CThostFtdcRspUserLoginField;
-import ctp.thosttraderapi.CThostFtdcTraderApi;
+import ctp.thosttraderapi.CThostFtdcSettlementInfoConfirmField;
+import ctp.thosttraderapi.CThostFtdcSettlementInfoField;
 import ctp.thosttraderapi.CThostFtdcTraderSpi;
+import ctp.thosttraderapi.CThostFtdcUserLogoutField;
 import ctp.thosttraderapi.THOST_TE_RESUME_TYPE;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Service
 public class CTPTrader {
-    private CThostFtdcTraderApi traderApi;
-    // Prod
-    // private final static String ctp1_TradeAddress = "tcp://180.166.132.67:41205";
+
+    static {
+        System.loadLibrary("thosttraderapi_se");
+        System.loadLibrary("thosttraderapi_wrap");
+    }
 
     @Autowired
-    private KafkaTemplate<String, String> kafkaTemplate;
+    private CTPTraderApi traderApi;
+    @Autowired
+    private CTPTraderSpi traderSpi;
+    @Autowired
+    private KafkaListenerEndpointRegistry registry;
+
     @Value("#{'tcp://' + '${app.ctp.ip}' + ':' + '${app.ctp.port}'}")
     private String ctpTradeAddress;
+    // Prod
+    // private final static String ctpTradeAddress = "tcp://180.166.132.67:41205";
     @Value("${app.ctp.username}")
     private String userId;
     @Value("${app.ctp.password}")
@@ -47,111 +61,81 @@ public class CTPTrader {
     private String authCode;
     @Value("${app.ctp.broker-id}")
     private String brokerId;
-    @Value("${spring.kafka.topic.instrument}")
-    private String topic;
 
-    static{
-		System.loadLibrary("thosttraderapi_se");
-		System.loadLibrary("thosttraderapi_wrap");
-    }
-    
-    @PostConstruct
-    public void postConstruct() {
-        traderApi = CThostFtdcTraderApi.CreateFtdcTraderApi("trade");
-        TraderSpiImpl traderSpi = new TraderSpiImpl();
-        traderApi.RegisterSpi(traderSpi);
-		traderApi.RegisterFront(ctpTradeAddress);
-		traderApi.SubscribePublicTopic(THOST_TE_RESUME_TYPE.THOST_TERT_QUICK);
-		traderApi.SubscribePrivateTopic(THOST_TE_RESUME_TYPE.THOST_TERT_QUICK);
-        traderApi.Init();
-        traderApi.Join();
-    }
-    
     @PreDestroy
     public void preDestroy() {
-        traderApi.Release();
+        logout().thenComposeAsync(nil -> traderApi.release());
     }
 
-    // TODO: to be used for listening signal in the future
-    // @KafkaListener(topics = "test")
-    // public void listenSignal(String payload) {
+    public void start() {
+        // CTP API必须在这个方法中被初始化，不能放在PostConstruct方法里。
+        // 因为CTP API要求挂起主线程，会导致SpringBoot应用无法完全启动。
+        CThostFtdcTraderSpi spiAdapter = new CTPTraderSpiAdapter(traderSpi);
+        traderApi.registerSpi(spiAdapter);
+        traderApi.registerFront(ctpTradeAddress);
+        traderApi.subscribePublicTopic(THOST_TE_RESUME_TYPE.THOST_TERT_QUICK);
+        traderApi.subscribePrivateTopic(THOST_TE_RESUME_TYPE.THOST_TERT_QUICK);
+        // Init方法必须被异步执行，否则容易导致由于swig引起的线程错误。
+        traderApi.init()
+            .thenCompose(nil -> authenticate())
+            .thenCompose(nil -> login())
+            .thenComposeAsync(nil -> queryInstrument())
+            .thenComposeAsync(nil ->  CompletableFuture.allOf(querySettlementInfo(), confirmSettlementInfo()))
+            .thenAcceptAsync(nil -> {
+                // 打开所有Kafka订阅
+                registry.getAllListenerContainers()
+                    .parallelStream()
+                    .forEach(listener -> listener.start());
+            });
+        log.info("[start] CTP接口异步连接中，主进程挂起");
+        traderApi.join();
+        // 不要在traderAPI以外的地方使用swig object，有异步时效性，容易造成错误。
+    }
 
-    // }
+    private CompletableFuture<CThostFtdcRspAuthenticateField> authenticate() {
+        CThostFtdcReqAuthenticateField reqAuthenticateField = new CThostFtdcReqAuthenticateField();
+        reqAuthenticateField.setBrokerID(brokerId);
+        reqAuthenticateField.setUserID(userId);
+        reqAuthenticateField.setAppID(appId);
+        reqAuthenticateField.setAuthCode(authCode);
+        return traderApi.reqAuthenticate(reqAuthenticateField);
+    }
 
-    class TraderSpiImpl extends CThostFtdcTraderSpi {
-        final static String m_TradingDay = "20181122";
-        final static String m_CurrencyId = "CNY";
+    private CompletableFuture<CThostFtdcRspUserLoginField> login() {
+        CThostFtdcReqUserLoginField reqUserLoginField = new CThostFtdcReqUserLoginField();
+        reqUserLoginField.setBrokerID(brokerId);
+        reqUserLoginField.setUserID(userId);
+        reqUserLoginField.setPassword(password);
+        return traderApi.reqUserLogin(reqUserLoginField);
+    }
 
-        TraderSpiImpl() { }
-        
-        @Override
-        public void OnFrontConnected() {
-            log.debug("On Front Connected");
-            CThostFtdcReqAuthenticateField field = new CThostFtdcReqAuthenticateField();
-            field.setBrokerID(brokerId);
-            field.setUserID(userId);
-            field.setAppID(appId);
-            field.setAuthCode(authCode);
-            traderApi.ReqAuthenticate(field, 0);
-            System.out.println("Send ReqAuthenticate ok");
-        }
+    private CompletableFuture<CThostFtdcUserLogoutField> logout() {
+        CThostFtdcUserLogoutField reqUserLogoutField = new CThostFtdcUserLogoutField();
+        reqUserLogoutField.setBrokerID(brokerId);
+        reqUserLogoutField.setUserID(userId);
+        return traderApi.reqUserLogout(reqUserLogoutField);
+    }
 
-        @Override
-        public void OnRspAuthenticate(CThostFtdcRspAuthenticateField pRspAuthenticateField, CThostFtdcRspInfoField pRspInfo, int nRequestID, boolean bIsLast) 
-        {
-            if (pRspInfo != null && pRspInfo.getErrorID() != 0) {
-                System.out.printf("Login ErrorID[%d] ErrMsg[%s]\n", pRspInfo.getErrorID(), pRspInfo.getErrorMsg());
-                return;
-            }
-            System.out.println("OnRspAuthenticate success!!!");
-            CThostFtdcReqUserLoginField field = new CThostFtdcReqUserLoginField();
-            field.setBrokerID(brokerId);
-            field.setUserID(userId);
-            field.setPassword(password);
-            traderApi.ReqUserLogin(field,0);
-            System.out.println("Send login ok");
-        }
+    private CompletableFuture<CThostFtdcInstrumentField> queryInstrument() {
+        CThostFtdcQryInstrumentField qryInstrumentField = new CThostFtdcQryInstrumentField();
+        qryInstrumentField.setExchangeID("");
+        return traderApi.reqQryInstrument(qryInstrumentField);
+    }
 
-        @Override
-        public void OnRspUserLogin(CThostFtdcRspUserLoginField pRspUserLogin, CThostFtdcRspInfoField pRspInfo, int nRequestID, boolean bIsLast)
-        {
-            if (pRspInfo != null && pRspInfo.getErrorID() != 0) {
-                System.out.printf("Login ErrorID[%d] ErrMsg[%s]\n", pRspInfo.getErrorID(), pRspInfo.getErrorMsg());
-                return;
-            }
-            log.debug("Login success!!!");
-            // CThostFtdcQryTradingAccountField qryTradingAccount = new CThostFtdcQryTradingAccountField();
-            // qryTradingAccount.setBrokerID(m_BrokerId);
-            // qryTradingAccount.setCurrencyID(m_CurrencyId);;
-            // qryTradingAccount.setInvestorID(m_InvestorId);
-            // //m_traderapi.ReqQryTradingAccount(qryTradingAccount, 1);
-            
-            // CThostFtdcQrySettlementInfoField qrysettlement = new CThostFtdcQrySettlementInfoField();
-            // qrysettlement.setBrokerID(m_BrokerId);
-            // qrysettlement.setInvestorID(m_InvestorId);
-            // qrysettlement.setTradingDay(m_TradingDay);
-            // qrysettlement.setAccountID(m_AccountId);
-            // qrysettlement.setCurrencyID(m_CurrencyId);
-            // //m_traderapi.ReqQrySettlementInfo(qrysettlement, 2);
-            
-            CThostFtdcQryInstrumentField qryInstr = new CThostFtdcQryInstrumentField();
-            traderApi.ReqQryInstrument(qryInstr, 1);
-            log.debug("Query success!!!");
-        }
+    private CompletableFuture<CThostFtdcSettlementInfoField> querySettlementInfo() {
+        CThostFtdcQrySettlementInfoField qrySettlementInfoField = new CThostFtdcQrySettlementInfoField();
+        qrySettlementInfoField.setBrokerID(brokerId);
+        qrySettlementInfoField.setInvestorID(investorId);
+        qrySettlementInfoField.setAccountID(accountId);
+        qrySettlementInfoField.setCurrencyID("CNY");
+        qrySettlementInfoField.setTradingDay("20200413");
+        return traderApi.reqQrySettlementInfo(qrySettlementInfoField);
+    }
 
-        @Override
-        public void OnRspQryInstrument(CThostFtdcInstrumentField pInstrument, CThostFtdcRspInfoField pRspInfo, int nRequestID, boolean bIsLast)
-        {
-            if (pRspInfo != null && pRspInfo.getErrorID() != 0) {
-                System.out.printf("OnRspQryInstrument ErrorID[%d] ErrMsg[%s]\n", pRspInfo.getErrorID(), pRspInfo.getErrorMsg());
-                return;
-            }
-            if (pInstrument != null) {
-                System.out.printf("%s\n",pInstrument.getInstrumentID());
-                kafkaTemplate.send(new ProducerRecord<String, String>(topic, pInstrument.getInstrumentID()));
-            } else {
-                System.out.printf("NULL obj\n");
-            }
-        }
+    private CompletableFuture<CThostFtdcSettlementInfoConfirmField> confirmSettlementInfo() {
+        CThostFtdcSettlementInfoConfirmField settlementInfoConfirmField = new CThostFtdcSettlementInfoConfirmField();
+        settlementInfoConfirmField.setBrokerID(brokerId);
+        settlementInfoConfirmField.setInvestorID(investorId);
+        return traderApi.reqSettlementInfoConfirm(settlementInfoConfirmField);
     }
 }

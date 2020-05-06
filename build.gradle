@@ -9,7 +9,7 @@ plugins {
 apply plugin: 'java'
 apply plugin: 'io.spring.dependency-management'
 
-version = '0.1.1'
+version = '0.2.0'
 
 compileJava.options.encoding = 'UTF-8' 
 compileTestJava.options.encoding = 'UTF-8'
@@ -49,6 +49,8 @@ dependencies {
   compileOnly 'org.projectlombok:lombok:1.18.8'
   annotationProcessor 'org.projectlombok:lombok:1.18.8'
   // Jupiter依赖
+  implementation 'com.github.JupiterFund:jupiter-commons:master-SNAPSHOT'
+  implementation 'com.github.JupiterFund:jupiterapis:master-SNAPSHOT'
   implementation 'com.github.JupiterFund:ctpapi:v6.3.15:all'
 
   // 测试依赖
@@ -89,7 +91,7 @@ task windows(type: Copy) {
 
 task linux(type: Copy) {
   description 'Show information about the operating system'
-  onlyIf { os.isLinux() && arch.getName() == "x64" }
+  onlyIf { os.isLinux() && arch.getName() == "x86-64" }
   from('lib/linux')
   into('build/distributions')
   include('*.so')
