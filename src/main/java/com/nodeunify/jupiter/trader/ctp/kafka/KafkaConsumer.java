@@ -4,6 +4,7 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import com.nodeunify.jupiter.commons.mapper.TraderCTPMapper;
 import com.nodeunify.jupiter.trader.ctp.impl.CTPTraderApi;
 import com.nodeunify.jupiter.trader.ctp.impl.CTPRequestManager;
+import com.nodeunify.jupiter.trader.ctp.v1.Instrument;
 import com.nodeunify.jupiter.trader.ctp.v1.Order;
 import com.nodeunify.jupiter.trader.ctp.v1.OrderAction;
 
@@ -14,6 +15,7 @@ import org.springframework.stereotype.Component;
 
 import ctp.thosttraderapi.CThostFtdcInputOrderActionField;
 import ctp.thosttraderapi.CThostFtdcInputOrderField;
+import ctp.thosttraderapi.CThostFtdcQryInstrumentField;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -24,6 +26,21 @@ public class KafkaConsumer {
     private CTPTraderApi traderApi;
     @Autowired
     private CTPRequestManager ctpRequestManager;
+
+    @KafkaListener(id = "queryInstrumentListner", topics = "${spring.kafka.topic.trader.ctp.qry.instrument}", autoStartup = "false")
+    public void listenQueryInstrument(ConsumerRecord<String, byte[]> record) {
+        try {
+            Instrument instrument = Instrument.parseFrom(record.value());
+            String uuid = instrument.getUUID();
+            int requestID = ctpRequestManager.getAndIncrementRequestID();
+            ctpRequestManager.registerUUID(requestID, uuid);
+            CThostFtdcQryInstrumentField qryInstrumentField = TraderCTPMapper.MAPPER.map(instrument);
+            traderApi.reqQryInstrument(qryInstrumentField, requestID);
+        } catch (InvalidProtocolBufferException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+    }
 
     @KafkaListener(id = "orderInsertListner", topics = "${spring.kafka.topic.trader.ctp.order.insert}", autoStartup = "false")
     public void listenOrderInsert(ConsumerRecord<String, byte[]> record) {

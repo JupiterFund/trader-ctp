@@ -79,7 +79,7 @@ public class CTPTrader {
         traderApi.init()
             .thenCompose(nil -> authenticate())
             .thenCompose(nil -> login())
-            .thenComposeAsync(nil -> queryInstrument())
+            // .thenComposeAsync(nil -> queryInstrument())
             .thenComposeAsync(nil ->  CompletableFuture.allOf(querySettlementInfo(), confirmSettlementInfo()))
             .thenAcceptAsync(nil -> {
                 // 打开所有Kafka订阅

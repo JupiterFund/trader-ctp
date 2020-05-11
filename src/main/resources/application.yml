@@ -23,26 +23,26 @@ spring:
       trader:
         ctp:
           qry:
-            instrument: trader.ctp.qry.instrument
-            investor-position: trader.ctp.qry.investor-position
-            trading-account: trader.ctp.qry.trading-account
-            order: trader.ctp.qry.order
+            instrument: dev.trader.ctp.qry.instrument
+            investor-position: dev.trader.ctp.qry.investor-position
+            trading-account: dev.trader.ctp.qry.trading-account
+            order: dev.trader.ctp.qry.order
           order:
-            insert: trader.ctp.order.insert
-            action: trader.ctp.order.action
+            insert: dev.trader.ctp.order.insert
+            action: dev.trader.ctp.order.action
           rsp:
-            instrument: trader.ctp.response.instrument
-            investor-position: trader.ctp.response.investor-position
-            trading-account: trader.ctp.response.trading-account
-            order: trader.ctp.rsp.order
-            trade: trader.ctp.rsp.trade
+            instrument: dev.trader.ctp.rsp.instrument
+            investor-position: dev.trader.ctp.rsp.investor-position
+            trading-account: dev.trader.ctp.rsp.trading-account
+            order: dev.trader.ctp.rsp.order
+            trade: dev.trader.ctp.rsp.trade
           rtn:
-            order: trader.ctp.rtn.order
-            trade: trader.ctp.rtn.trade
+            order: dev.trader.ctp.rtn.order
+            trade: dev.trader.ctp.rtn.trade
           err:
             order:
-              insert: trader.ctp.err.order.insert
-              action: trader.ctp.err.order.action
+              insert: dev.trader.ctp.err.order.insert
+              action: dev.trader.ctp.err.order.action
 app:
   ctp:
     ip: 180.168.146.187
