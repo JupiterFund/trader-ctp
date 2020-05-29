@@ -1,5 +1,6 @@
 package com.nodeunify.jupiter.trader.ctp.impl;
 
+import ctp.thosttraderapi.CThostFtdcDepthMarketDataField;
 import ctp.thosttraderapi.CThostFtdcInputOrderActionField;
 import ctp.thosttraderapi.CThostFtdcInputOrderField;
 import ctp.thosttraderapi.CThostFtdcInstrumentField;
@@ -95,13 +96,19 @@ public class CTPTraderSpiAdapter extends CThostFtdcTraderSpi {
     }
 
     @Override
-    public void OnRspQryOrder(CThostFtdcOrderField pOrder, CThostFtdcRspInfoField pRspInfo, int nRequestID, 
+    public void OnRspQryDepthMarketData(CThostFtdcDepthMarketDataField pDepthMarketData, 
+            CThostFtdcRspInfoField pRspInfo, int nRequestID, boolean bIsLast) {
+        delegate.onRspQryDepthMarketData(pDepthMarketData, pRspInfo, nRequestID, bIsLast);
+    }
+
+    @Override
+    public void OnRspQryOrder(CThostFtdcOrderField pOrder, CThostFtdcRspInfoField pRspInfo, int nRequestID,
             boolean bIsLast) {
         delegate.onRspQryOrder(pOrder, pRspInfo, nRequestID, bIsLast);
     }
 
     @Override
-    public void OnRspQryTrade(CThostFtdcTradeField pTrade, CThostFtdcRspInfoField pRspInfo, int nRequestID, 
+    public void OnRspQryTrade(CThostFtdcTradeField pTrade, CThostFtdcRspInfoField pRspInfo, int nRequestID,
             boolean bIsLast) {
         delegate.onRspQryTrade(pTrade, pRspInfo, nRequestID, bIsLast);
     }
@@ -137,5 +144,5 @@ public class CTPTraderSpiAdapter extends CThostFtdcTraderSpi {
     public void OnRtnTrade(CThostFtdcTradeField pTrade) {
         delegate.onRtnTrade(pTrade);
     }
-    
+
 }

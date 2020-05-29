@@ -43,6 +43,9 @@ spring:
             order:
               insert: dev.trader.ctp.err.order.insert
               action: dev.trader.ctp.err.order.action
+grpc:
+  port: 6565
+  enableReflection: true
 app:
   ctp:
     ip: 180.168.146.187

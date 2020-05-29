@@ -1,11 +1,13 @@
 package com.nodeunify.jupiter.trader.ctp.impl;
 
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 import com.nodeunify.jupiter.trader.ctp.util.CTPUtil;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
+import ctp.thosttraderapi.CThostFtdcDepthMarketDataField;
 import ctp.thosttraderapi.CThostFtdcInputOrderActionField;
 import ctp.thosttraderapi.CThostFtdcInputOrderField;
 import ctp.thosttraderapi.CThostFtdcInstrumentField;
@@ -13,6 +15,7 @@ import ctp.thosttraderapi.CThostFtdcInvestorPositionDetailField;
 import ctp.thosttraderapi.CThostFtdcInvestorPositionField;
 import ctp.thosttraderapi.CThostFtdcOrderActionField;
 import ctp.thosttraderapi.CThostFtdcOrderField;
+import ctp.thosttraderapi.CThostFtdcQryDepthMarketDataField;
 import ctp.thosttraderapi.CThostFtdcQryInstrumentField;
 import ctp.thosttraderapi.CThostFtdcQryInvestorPositionDetailField;
 import ctp.thosttraderapi.CThostFtdcQryInvestorPositionField;
@@ -160,6 +163,7 @@ public class CTPTraderApi {
 
         if (traderApi.ReqQrySettlementInfo(pQrySettlementInfo, nRequestID) != 0) {
             log.error("[reqQrySettlementInfo] 发送查询投资者结算结果请求失败");
+            listener.completeExceptionally(new RuntimeException("发送查询投资者结算结果请求失败"));
         } else {
             log.info("[reqQrySettlementInfo] 发送查询投资者结算结果请求成功");
         }
@@ -178,6 +182,7 @@ public class CTPTraderApi {
 
         if (traderApi.ReqSettlementInfoConfirm(pSettlementInfoConfirm, nRequestID) != 0) {
             log.error("[reqSettlementInfoConfirm] 发送确认投资者结算结果请求失败");
+            listener.completeExceptionally(new RuntimeException("发送确认投资者结算结果请求失败"));
         } else {
             log.info("[reqSettlementInfoConfirm] 发送确认投资者结算结果请求成功");
         }
@@ -185,17 +190,18 @@ public class CTPTraderApi {
         return listener;
     }
 
-    public CompletableFuture<CThostFtdcInvestorPositionField> reqQryInvestorPosition(CThostFtdcQryInvestorPositionField pQryInvestorPosition) {
+    public CompletableFuture<List<CThostFtdcInvestorPositionField>> reqQryInvestorPosition(CThostFtdcQryInvestorPositionField pQryInvestorPosition) {
         int requestID = ctpRequestManager.getAndIncrementRequestID();
         return reqQryInvestorPosition(pQryInvestorPosition, requestID);
     }
 
-    public CompletableFuture<CThostFtdcInvestorPositionField> reqQryInvestorPosition(CThostFtdcQryInvestorPositionField pQryInvestorPosition, int nRequestID) {
-        CompletableFuture<CThostFtdcInvestorPositionField> listener = new CompletableFuture<>();
+    public CompletableFuture<List<CThostFtdcInvestorPositionField>> reqQryInvestorPosition(CThostFtdcQryInvestorPositionField pQryInvestorPosition, int nRequestID) {
+        CompletableFuture<List<CThostFtdcInvestorPositionField>> listener = new CompletableFuture<>();
         ctpRequestManager.addListener(nRequestID, listener);
 
         if (traderApi.ReqQryInvestorPosition(pQryInvestorPosition, nRequestID) != 0) {
             log.error("[reqQryInvestorPosition] 发送持仓查询请求失败");
+            listener.completeExceptionally(new RuntimeException("发送持仓查询请求失败"));
         } else {
             log.info("[reqQryInvestorPosition] 发送持仓查询请求成功");
         }
@@ -203,19 +209,20 @@ public class CTPTraderApi {
         return listener;
     }
 
-    public CompletableFuture<CThostFtdcInvestorPositionDetailField> reqQryInvestorPositionDetail(CThostFtdcQryInvestorPositionDetailField pQryInvestorPositionDetail) {
+    public CompletableFuture<List<CThostFtdcInvestorPositionDetailField>> reqQryInvestorPositionDetail(CThostFtdcQryInvestorPositionDetailField pQryInvestorPositionDetail) {
         int requestID = ctpRequestManager.getAndIncrementRequestID();
         return reqQryInvestorPositionDetail(pQryInvestorPositionDetail, requestID);
     }
 
-    public CompletableFuture<CThostFtdcInvestorPositionDetailField> reqQryInvestorPositionDetail(CThostFtdcQryInvestorPositionDetailField pQryInvestorPositionDetail, int nRequestID) {
-        CompletableFuture<CThostFtdcInvestorPositionDetailField> listener = new CompletableFuture<>();
+    public CompletableFuture<List<CThostFtdcInvestorPositionDetailField>> reqQryInvestorPositionDetail(CThostFtdcQryInvestorPositionDetailField pQryInvestorPositionDetail, int nRequestID) {
+        CompletableFuture<List<CThostFtdcInvestorPositionDetailField>> listener = new CompletableFuture<>();
         ctpRequestManager.addListener(nRequestID, listener);
 
         if (traderApi.ReqQryInvestorPositionDetail(pQryInvestorPositionDetail, nRequestID) != 0) {
-            log.error("[reqQryInvestorPositionDetail] 发送请求失败");
+            log.error("[reqQryInvestorPositionDetail] 发送持仓明细查询请求失败");
+            listener.completeExceptionally(new RuntimeException("发送持仓明细查询请求失败"));
         } else {
-            log.info("[reqQryInvestorPositionDetail] 发送请求成功");
+            log.info("[reqQryInvestorPositionDetail] 发送持仓明细查询请求成功");
         }
         
         return listener;
@@ -232,6 +239,7 @@ public class CTPTraderApi {
 
         if (traderApi.ReqQryTradingAccount(pQryTradingAccount, nRequestID) != 0) {
             log.error("[reqQryTradingAccount] 发送请求失败");
+            listener.completeExceptionally(new RuntimeException("发送请求失败"));
         } else {
             log.info("[reqQryTradingAccount] 发送请求成功");
         }
@@ -250,8 +258,28 @@ public class CTPTraderApi {
 
         if (traderApi.ReqQryInstrument(pQryInstrument, nRequestID) != 0) {
             log.error("[reqQryInstrument] 发送查询合约请求失败");
+            listener.completeExceptionally(new RuntimeException("发送查询合约请求失败"));
         } else {
             log.info("[reqQryInstrument] 发送查询合约请求成功");
+        }
+
+        return listener;
+    }
+
+    public CompletableFuture<CThostFtdcDepthMarketDataField> reqQryDepthMarketData(CThostFtdcQryDepthMarketDataField pQryDepthMarketData) {
+        int requestID = ctpRequestManager.getAndIncrementRequestID();
+        return reqQryDepthMarketData(pQryDepthMarketData, requestID);
+    }
+
+    public CompletableFuture<CThostFtdcDepthMarketDataField> reqQryDepthMarketData(CThostFtdcQryDepthMarketDataField pQryDepthMarketData, int nRequestID) {
+        CompletableFuture<CThostFtdcDepthMarketDataField> listener = new CompletableFuture<>();
+        ctpRequestManager.addListener(nRequestID, listener);
+
+        if (traderApi.ReqQryDepthMarketData(pQryDepthMarketData, nRequestID) != 0) {
+            log.error("[reqQryDepthMarketData] 发送查询行情数据请求失败");
+            listener.completeExceptionally(new RuntimeException("发送查询行情数据请求失败"));
+        } else {
+            log.info("[reqQryDepthMarketData] 发送查询行情数据请求成功");
         }
 
         return listener;
@@ -267,9 +295,10 @@ public class CTPTraderApi {
         ctpRequestManager.addListener(nRequestID, listener);
 
         if (traderApi.ReqQryOrder(pQryOrder, nRequestID) != 0) {
-            log.error("[reqQryOrder] 发送请求失败");
+            log.error("[reqQryOrder] 发送报单查询请求失败");
+            listener.completeExceptionally(new RuntimeException("发送报单查询请求失败"));
         } else {
-            log.info("[reqQryOrder] 发送请求成功");
+            log.info("[reqQryOrder] 发送报单查询请求成功");
         }
 
         return listener;
@@ -286,6 +315,7 @@ public class CTPTraderApi {
 
         if (traderApi.ReqQryTrade(pQryTrade, nRequestID) != 0) {
             log.error("[reqQryTrade] 发送请求失败");
+            listener.completeExceptionally(new RuntimeException("发送成交单查询请求失败"));
         } else {
             log.info("[reqQryTrade] 发送请求成功");
         }

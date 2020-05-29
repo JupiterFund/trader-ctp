@@ -1,13 +1,19 @@
 package com.nodeunify.jupiter.trader.ctp.impl;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 
 import com.nodeunify.jupiter.trader.ctp.datatype.ThostFtdcUserApiDataTypeLibrary;
 import com.nodeunify.jupiter.trader.ctp.kafka.KafkaProducer;
 import com.nodeunify.jupiter.trader.ctp.util.CTPUtil;
 
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import ctp.thosttraderapi.CThostFtdcDepthMarketDataField;
 import ctp.thosttraderapi.CThostFtdcInputOrderActionField;
 import ctp.thosttraderapi.CThostFtdcInputOrderField;
 import ctp.thosttraderapi.CThostFtdcInstrumentField;
@@ -28,37 +34,36 @@ import lombok.extern.slf4j.Slf4j;
 @SuppressWarnings("unchecked")
 @Slf4j
 public class CTPTraderSpi {
-    
+
     @Autowired
     private CTPRequestManager ctpRequestManager;
     @Autowired
     private KafkaProducer kafkaProducer;
+
+    private final Map<Integer, List<?>> responseMap = new ConcurrentHashMap<>();
 
     /**
      * 当客户端与交易后台建立起通信连接时（还未登录前）,该方法被调用。
      */
     public void onFrontConnected() {
         log.info("[onFrontConnected] 连接交易前置机成功!");
-        CompletableFuture<Boolean> listener = (CompletableFuture<Boolean>) ctpRequestManager.getListener(CTPUtil.REQUEST_ID_INIT);
+        CompletableFuture<Boolean> listener = (CompletableFuture<Boolean>) ctpRequestManager
+                .getListener(CTPUtil.REQUEST_ID_INIT);
         if (listener != null && !listener.isDone()) {
             listener.complete(true);
         }
     }
 
     /**
-     * 当客户端与交易后台通信连接断开时,该方法被调用。当发生这个情况后,API会自动重新
-     * 连接,客户端可不做处理。 
+     * 当客户端与交易后台通信连接断开时,该方法被调用。当发生这个情况后,API会自动重新 连接,客户端可不做处理。
      * 
-     * 0x1001 网络读失败 
-     * 0x1002 网络写失败 
-     * 0x2001 接收心跳超时 
-     * 0x2002 发送心跳失败 
-     * 0x2003 收到错误报文
+     * 0x1001 网络读失败 0x1002 网络写失败 0x2001 接收心跳超时 0x2002 发送心跳失败 0x2003 收到错误报文
      * 
      * @param nReason
      */
     public void onFrontDisconnected(int nReason) {
-        CompletableFuture<Boolean> listener = (CompletableFuture<Boolean>) ctpRequestManager.getListener(CTPUtil.REQUEST_ID_RELEASE);
+        CompletableFuture<Boolean> listener = (CompletableFuture<Boolean>) ctpRequestManager
+                .getListener(CTPUtil.REQUEST_ID_RELEASE);
         if (listener != null && !listener.isDone()) {
             // 主动断开，FutureRegistry中留有已保存的CompletableFuture
             log.info("[onFrontDisconnected] 客户端与交易服务断开连接. 原因:{}", CTPUtil.getReasonTraderMsg(nReason));
@@ -86,7 +91,7 @@ public class CTPTraderSpi {
      * @param nRequestID
      * @param bIsLast
      */
-    public void onRspAuthenticate(CThostFtdcRspAuthenticateField pRspAuthenticateField, CThostFtdcRspInfoField pRspInfo, 
+    public void onRspAuthenticate(CThostFtdcRspAuthenticateField pRspAuthenticateField, CThostFtdcRspInfoField pRspInfo,
             int nRequestID, boolean bIsLast) {
         if (null != pRspInfo && pRspInfo.getErrorID() != 0) {
             log.error("[onRspAuthenticate] 交易服务器认证失败. 错误代码:{}; 错误消息:{}", pRspInfo.getErrorID(), pRspInfo.getErrorMsg());
@@ -94,8 +99,8 @@ public class CTPTraderSpi {
             log.info("[onRspAuthenticate] 交易服务器认证成功");
         }
 
-        CompletableFuture<CThostFtdcRspAuthenticateField> listener = 
-                (CompletableFuture<CThostFtdcRspAuthenticateField>) ctpRequestManager.getListener(nRequestID);
+        CompletableFuture<CThostFtdcRspAuthenticateField> listener = (CompletableFuture<CThostFtdcRspAuthenticateField>) ctpRequestManager
+                .getListener(nRequestID);
         if (listener != null && !listener.isDone()) {
             listener.complete(pRspAuthenticateField);
         }
@@ -109,17 +114,18 @@ public class CTPTraderSpi {
      * @param nRequestID
      * @param bIsLast
      */
-    public void onRspUserLogin(CThostFtdcRspUserLoginField pRspUserLogin, CThostFtdcRspInfoField pRspInfo, 
+    public void onRspUserLogin(CThostFtdcRspUserLoginField pRspUserLogin, CThostFtdcRspInfoField pRspInfo,
             int nRequestID, boolean isLast) {
         if (null != pRspInfo && pRspInfo.getErrorID() != 0) {
             log.error("[onRspUserLogin] 交易服务器登录失败. 错误代码:{}; 错误消息:{}", pRspInfo.getErrorID(), pRspInfo.getErrorMsg());
         } else {
             log.info("[onRspUserLogin] 交易服务器登录成功");
-            log.info("[onRspUserLogin] 登录信息: FrontID={},SessionID={}", pRspUserLogin.getFrontID(), pRspUserLogin.getSessionID());
+            log.info("[onRspUserLogin] 登录信息: FrontID={},SessionID={}", pRspUserLogin.getFrontID(),
+                    pRspUserLogin.getSessionID());
         }
 
-        CompletableFuture<CThostFtdcRspUserLoginField> listener = 
-                (CompletableFuture<CThostFtdcRspUserLoginField>) ctpRequestManager.getListener(nRequestID);
+        CompletableFuture<CThostFtdcRspUserLoginField> listener = (CompletableFuture<CThostFtdcRspUserLoginField>) ctpRequestManager
+                .getListener(nRequestID);
         if (listener != null && !listener.isDone()) {
             listener.complete(pRspUserLogin);
         }
@@ -133,12 +139,12 @@ public class CTPTraderSpi {
      * @param nRequestID
      * @param bIsLast
      */
-    public void onRspUserLogout(CThostFtdcUserLogoutField pUserLogout, CThostFtdcRspInfoField pRspInfo, int nRequestID, 
+    public void onRspUserLogout(CThostFtdcUserLogoutField pUserLogout, CThostFtdcRspInfoField pRspInfo, int nRequestID,
             boolean isLast) {
         log.info("[onRspUserLogout] 交易服务器注销成功");
-        
-        CompletableFuture<CThostFtdcUserLogoutField> listener = 
-                (CompletableFuture<CThostFtdcUserLogoutField>) ctpRequestManager.getListener(nRequestID);
+
+        CompletableFuture<CThostFtdcUserLogoutField> listener = (CompletableFuture<CThostFtdcUserLogoutField>) ctpRequestManager
+                .getListener(nRequestID);
         if (listener != null && !listener.isDone()) {
             listener.complete(pUserLogout);
         }
@@ -152,16 +158,17 @@ public class CTPTraderSpi {
      * @param nRequestID
      * @param bIsLast
      */
-    public void onRspQrySettlementInfo(CThostFtdcSettlementInfoField pSettlementInfo, CThostFtdcRspInfoField pRspInfo, 
+    public void onRspQrySettlementInfo(CThostFtdcSettlementInfoField pSettlementInfo, CThostFtdcRspInfoField pRspInfo,
             int nRequestID, boolean bIsLast) {
         if (null != pRspInfo && pRspInfo.getErrorID() != 0) {
-            log.error("[onRspQrySettlementInfo] 查询投资者结算结果响应失败. 错误代码:{}; 错误消息:{}", pRspInfo.getErrorID(), pRspInfo.getErrorMsg());
+            log.error("[onRspQrySettlementInfo] 查询投资者结算结果响应失败. 错误代码:{}; 错误消息:{}", pRspInfo.getErrorID(),
+                    pRspInfo.getErrorMsg());
         } else {
             log.info("[onRspQrySettlementInfo] 查询投资者结算结果响应成功");
         }
 
-        CompletableFuture<CThostFtdcSettlementInfoField> listener = 
-                (CompletableFuture<CThostFtdcSettlementInfoField>) ctpRequestManager.getListener(nRequestID);
+        CompletableFuture<CThostFtdcSettlementInfoField> listener = (CompletableFuture<CThostFtdcSettlementInfoField>) ctpRequestManager
+                .getListener(nRequestID);
         if (listener != null && !listener.isDone()) {
             listener.complete(pSettlementInfo);
         }
@@ -175,16 +182,17 @@ public class CTPTraderSpi {
      * @param nRequestID
      * @param bIsLast
      */
-    public void onRspSettlementInfoConfirm(CThostFtdcSettlementInfoConfirmField pSettlementInfoConfirm, 
+    public void onRspSettlementInfoConfirm(CThostFtdcSettlementInfoConfirmField pSettlementInfoConfirm,
             CThostFtdcRspInfoField pRspInfo, int nRequestID, boolean bIsLast) {
         if (null != pRspInfo && pRspInfo.getErrorID() != 0) {
-            log.error("[onRspSettlementInfoConfirm] 确认投资者结算结果响应失败. 错误代码:{}; 错误消息:{}", pRspInfo.getErrorID(), pRspInfo.getErrorMsg());
+            log.error("[onRspSettlementInfoConfirm] 确认投资者结算结果响应失败. 错误代码:{}; 错误消息:{}", pRspInfo.getErrorID(),
+                    pRspInfo.getErrorMsg());
         } else {
             log.info("[onRspSettlementInfoConfirm] 确认投资者结算结果响应成功");
         }
 
-        CompletableFuture<CThostFtdcSettlementInfoConfirmField> listener = 
-                (CompletableFuture<CThostFtdcSettlementInfoConfirmField>) ctpRequestManager.getListener(nRequestID);
+        CompletableFuture<CThostFtdcSettlementInfoConfirmField> listener = (CompletableFuture<CThostFtdcSettlementInfoConfirmField>) ctpRequestManager
+                .getListener(nRequestID);
         if (listener != null && !listener.isDone()) {
             listener.complete(pSettlementInfoConfirm);
         }
@@ -198,33 +206,50 @@ public class CTPTraderSpi {
      * @param nRequestID
      * @param bIsLast
      */
-    public void onRspQryInvestorPosition(CThostFtdcInvestorPositionField pInvestorPosition, 
+    public void onRspQryInvestorPosition(CThostFtdcInvestorPositionField pInvestorPosition,
             CThostFtdcRspInfoField pRspInfo, int nRequestID, boolean bIsLast) {
         if (null != pRspInfo && pRspInfo.getErrorID() != 0) {
-            log.error("[onRspQryInvestorPosition] 投资者持仓查询应答失败. 错误代码:{}; 错误消息:{}", pRspInfo.getErrorID(), pRspInfo.getErrorMsg());
+            log.error("[onRspQryInvestorPosition] 投资者持仓查询应答失败. 错误代码:{}; 错误消息:{}", pRspInfo.getErrorID(),
+                    pRspInfo.getErrorMsg());
         } else {
             log.info("[onRspQryInvestorPosition] 投资者持仓查询应答成功");
         }
 
-        log.debug("bIsLast: {}", bIsLast);
+        List<CThostFtdcInvestorPositionField> fields = (List<CThostFtdcInvestorPositionField>) responseMap.getOrDefault(nRequestID, new ArrayList<>());
+        // TODO: 返回结果含有多次回调时，在同步处理的情况下，
+        // 需要一次性返回整个结果集. 暂时使用Map来缓存结果。
+        // 最终采用RxJava响应式回调来处理异步结果集.
+        // InvestorPosition can be null if not found
         if (pInvestorPosition != null) {
-            log.debug("[onRspQryInvestorPosition] 合约代码:{}; 交易所代码:{}; 经纪公司代码:{}; 投资者代码:{}; 多空方向:{}; 今日持仓:{}; 上日持仓:{}; 开仓量:{}; 平仓量:{}; 开仓金额:{}; 平仓金额:{}; 持仓成本:{}", 
-                pInvestorPosition.getInstrumentID(), pInvestorPosition.getExchangeID(), pInvestorPosition.getBrokerID(),
-                pInvestorPosition.getInvestorID(), pInvestorPosition.getPosiDirection(), 
-                pInvestorPosition.getPosition(), pInvestorPosition.getYdPosition(), 
-                pInvestorPosition.getOpenVolume(), pInvestorPosition.getCloseVolume(), 
-                pInvestorPosition.getOpenAmount(), pInvestorPosition.getCloseAmount(), 
-                pInvestorPosition.getPositionCost());
-        }
-        
-        CompletableFuture<CThostFtdcInvestorPositionField> listener = 
-                (CompletableFuture<CThostFtdcInvestorPositionField>) ctpRequestManager.getListener(nRequestID);
-        if (listener != null && !listener.isDone()) {
-            listener.complete(pInvestorPosition);
+            log.debug(
+                "[onRspQryInvestorPosition] 合约代码:{}; 交易所代码:{}; 经纪公司代码:{}; 投资者代码:{}; 多空方向:{}; 今日持仓:{}; 上日持仓:{}; 开仓量:{}; 平仓量:{}; 开仓金额:{}; 平仓金额:{}; 持仓成本:{}",
+                pInvestorPosition.getInstrumentID(), pInvestorPosition.getExchangeID(),
+                pInvestorPosition.getBrokerID(), pInvestorPosition.getInvestorID(),
+                pInvestorPosition.getPosiDirection(), pInvestorPosition.getPosition(),
+                pInvestorPosition.getYdPosition(), pInvestorPosition.getOpenVolume(),
+                pInvestorPosition.getCloseVolume(), pInvestorPosition.getOpenAmount(),
+                pInvestorPosition.getCloseAmount(), pInvestorPosition.getPositionCost());
+
+            // 回调结果会被下一次回调覆盖. 临时解决办法:复制拷贝一份回调结果放入缓存
+            CThostFtdcInvestorPositionField copy = new CThostFtdcInvestorPositionField();
+            BeanUtils.copyProperties(pInvestorPosition, copy);
+            fields.add(copy);
+            responseMap.put(nRequestID, fields);
         }
 
-        String uuid = ctpRequestManager.lookupUUID(nRequestID);
-        kafkaProducer.send(uuid, pInvestorPosition);
+        if (bIsLast) {
+            log.debug("[onRspQryInvestorPosition] 最后一条持仓记录");
+            CompletableFuture<List<CThostFtdcInvestorPositionField>> listener = 
+                (CompletableFuture<List<CThostFtdcInvestorPositionField>>) ctpRequestManager.getListener(nRequestID);
+            if (listener != null && !listener.isDone()) {
+                listener.complete(fields);
+            }
+        }
+
+        if (pInvestorPosition != null) {
+            String uuid = ctpRequestManager.lookupUUID(nRequestID);
+            kafkaProducer.send(uuid, pInvestorPosition);
+        }
     }
 
     /**
@@ -241,12 +266,29 @@ public class CTPTraderSpi {
             log.error("[onRspQryInvestorPositionDetail] 查询投资者持仓明细响应失败. 错误代码:{}; 错误消息:{}", pRspInfo.getErrorID(), pRspInfo.getErrorMsg());
         } else {
             log.info("[onRspQryInvestorPositionDetail] 查询投资者持仓明细响应成功");
-        }        
+        }
 
-        CompletableFuture<CThostFtdcInvestorPositionDetailField> listener = 
-                (CompletableFuture<CThostFtdcInvestorPositionDetailField>) ctpRequestManager.getListener(nRequestID);
-        if (listener != null && !listener.isDone()) {
-            listener.complete(pInvestorPositionDetail);
+        List<CThostFtdcInvestorPositionDetailField> fields = (List<CThostFtdcInvestorPositionDetailField>) responseMap.getOrDefault(nRequestID, new ArrayList<>());
+
+        if (pInvestorPositionDetail != null) {
+            log.debug(
+                "[onRspQryInvestorPositionDetail] 合约代码:{}; 交易所代码:{}; 经纪公司代码:{}; 投资者代码:{}.",
+                pInvestorPositionDetail.getInstrumentID(), pInvestorPositionDetail.getExchangeID(),
+                pInvestorPositionDetail.getBrokerID(), pInvestorPositionDetail.getInvestorID());
+
+            CThostFtdcInvestorPositionDetailField copy = new CThostFtdcInvestorPositionDetailField();
+            BeanUtils.copyProperties(pInvestorPositionDetail, copy);
+            fields.add(copy);
+            responseMap.put(nRequestID, fields);
+        }
+
+        if (bIsLast) {
+            log.debug("[onRspQryInvestorPositionDetail] 最后一条持仓明细记录");
+            CompletableFuture<List<CThostFtdcInvestorPositionDetailField>> listener = 
+                (CompletableFuture<List<CThostFtdcInvestorPositionDetailField>>) ctpRequestManager.getListener(nRequestID);
+            if (listener != null && !listener.isDone()) {
+                listener.complete(fields);
+            }
         }
     }
 
@@ -308,6 +350,29 @@ public class CTPTraderSpi {
 
         String uuid = ctpRequestManager.lookupUUID(nRequestID);
         kafkaProducer.send(uuid, pInstrument);
+    }
+
+    /**
+     * 
+     * 
+     * @param pDepthMarketData
+     * @param pRspInfo
+     * @param nRequestID
+     * @param bIsLast
+     */
+    public void onRspQryDepthMarketData(CThostFtdcDepthMarketDataField pDepthMarketData, CThostFtdcRspInfoField pRspInfo, 
+            int nRequestID, boolean bIsLast) {
+        if (null != pRspInfo && pRspInfo.getErrorID() != 0) {
+            log.error("[onRspQryDepthMarketData] 查询行情数据响应失败. 错误代码:{}; 错误消息:{}", pRspInfo.getErrorID(), pRspInfo.getErrorMsg());
+        } else {
+            log.info("[onRspQryDepthMarketData] 查询行情数据响应成功");
+        }
+
+        CompletableFuture<CThostFtdcDepthMarketDataField> listener = 
+                (CompletableFuture<CThostFtdcDepthMarketDataField>) ctpRequestManager.getListener(nRequestID);
+        if (listener != null && !listener.isDone()) {
+            listener.complete(pDepthMarketData);
+        }
     }
 
     /**
