@@ -447,7 +447,7 @@ public class CTPTraderSpi {
                 (CompletableFuture<CThostFtdcInputOrderField>) ctpRequestManager.getListener(nRequestID);
         // CTP校验未通过
         if (errorListener != null && !errorListener.isDone()) {
-            errorListener.completeExceptionally(null);
+            errorListener.completeExceptionally(new RuntimeException("CTP验证未通过"));
         }
 
         String uuid = ctpRequestManager.lookupUUID(Integer.parseInt(pInputOrder.getOrderRef()));
