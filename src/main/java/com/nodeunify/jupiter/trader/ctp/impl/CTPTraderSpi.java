@@ -12,6 +12,7 @@ import com.nodeunify.jupiter.trader.ctp.util.CTPUtil;
 
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 
 import ctp.thosttraderapi.CThostFtdcDepthMarketDataField;
 import ctp.thosttraderapi.CThostFtdcInputOrderActionField;
@@ -39,6 +40,8 @@ public class CTPTraderSpi {
     private CTPRequestManager ctpRequestManager;
     @Autowired
     private KafkaProducer kafkaProducer;
+    @Autowired
+    private ApplicationEventPublisher eventPublisher;
 
     private final Map<Integer, List<?>> responseMap = new ConcurrentHashMap<>();
 
@@ -49,8 +52,13 @@ public class CTPTraderSpi {
         log.info("[onFrontConnected] 连接交易前置机成功!");
         CompletableFuture<Boolean> listener = (CompletableFuture<Boolean>) ctpRequestManager
                 .getListener(CTPUtil.REQUEST_ID_INIT);
-        if (listener != null && !listener.isDone()) {
-            listener.complete(true);
+        if (listener != null) {
+            if (!listener.isDone()) {
+                listener.complete(true);
+            } else {
+                // 临时解决方案: 重连交易前置机之后，强制CTPTrader重新登录
+                eventPublisher.publishEvent(new CTPTraderEvent("onFrontReconnected"));
+            }
         }
     }
 

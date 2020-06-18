@@ -5,16 +5,16 @@ import java.util.concurrent.CompletableFuture;
 import javax.annotation.PreDestroy;
 
 import com.nodeunify.jupiter.trader.ctp.impl.CTPTraderApi;
+import com.nodeunify.jupiter.trader.ctp.impl.CTPTraderEvent;
 import com.nodeunify.jupiter.trader.ctp.impl.CTPTraderSpi;
 import com.nodeunify.jupiter.trader.ctp.impl.CTPTraderSpiAdapter;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.event.EventListener;
 import org.springframework.kafka.config.KafkaListenerEndpointRegistry;
 import org.springframework.stereotype.Service;
 
-import ctp.thosttraderapi.CThostFtdcInstrumentField;
-import ctp.thosttraderapi.CThostFtdcQryInstrumentField;
 import ctp.thosttraderapi.CThostFtdcQrySettlementInfoField;
 import ctp.thosttraderapi.CThostFtdcReqAuthenticateField;
 import ctp.thosttraderapi.CThostFtdcReqUserLoginField;
@@ -67,6 +67,15 @@ public class CTPTrader {
         logout().thenComposeAsync(nil -> traderApi.release());
     }
 
+    @EventListener
+    void handleCTPTraderEvent(CTPTraderEvent event) {
+        if ("onFrontReconnected".equals(event.getSource())) {
+            log.debug("[handleCTPTraderEvent] 交易前置已重连，用户重新登录");
+            login();
+        }
+        
+    }
+
     public void start() {
         // CTP API必须在这个方法中被初始化，不能放在PostConstruct方法里。
         // 因为CTP API要求挂起主线程，会导致SpringBoot应用无法完全启动。
@@ -79,7 +88,6 @@ public class CTPTrader {
         traderApi.init()
             .thenCompose(nil -> authenticate())
             .thenCompose(nil -> login())
-            // .thenComposeAsync(nil -> queryInstrument())
             .thenComposeAsync(nil ->  CompletableFuture.allOf(querySettlementInfo(), confirmSettlementInfo()))
             .thenAcceptAsync(nil -> {
                 // 打开所有Kafka订阅
@@ -114,12 +122,6 @@ public class CTPTrader {
         reqUserLogoutField.setBrokerID(brokerId);
         reqUserLogoutField.setUserID(userId);
         return traderApi.reqUserLogout(reqUserLogoutField);
-    }
-
-    private CompletableFuture<CThostFtdcInstrumentField> queryInstrument() {
-        CThostFtdcQryInstrumentField qryInstrumentField = new CThostFtdcQryInstrumentField();
-        qryInstrumentField.setExchangeID("");
-        return traderApi.reqQryInstrument(qryInstrumentField);
     }
 
     private CompletableFuture<CThostFtdcSettlementInfoField> querySettlementInfo() {
