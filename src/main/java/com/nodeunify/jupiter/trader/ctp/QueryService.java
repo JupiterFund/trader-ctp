@@ -81,7 +81,7 @@ public class QueryService extends QueryServiceGrpc.QueryServiceImplBase {
     @Override
     public void queryInvestorPositionDetail(QueryInvestorPositionDetailField request,
             StreamObserver<InvestorPositionDetail> responseObserver) {
-        log.debug("[queryInvestorPosition] 查询持仓明细. QueryInvestorPositionDetailField:{}", request);
+        log.debug("[queryInvestorPositionDetail] 查询持仓明细. QueryInvestorPositionDetailField:{}", request);
         CThostFtdcQryInvestorPositionDetailField qryInvestorPositionDetailField = TraderCTPMapper.MAPPER.map(request);
         traderApi.reqQryInvestorPositionDetail(qryInvestorPositionDetailField).thenAccept(investorPositionDetailFieldList -> {
             investorPositionDetailFieldList.forEach(investorPositionDetailField -> {
@@ -91,7 +91,7 @@ public class QueryService extends QueryServiceGrpc.QueryServiceImplBase {
             });
             responseObserver.onCompleted();
         }).exceptionally(exception -> {
-            log.warn("[queryInvestorPosition] 持仓明细查询异常", exception);
+            log.warn("[queryInvestorPositionDetail] 持仓明细查询异常", exception);
             responseObserver.onError(exception);
             return null;
         });
@@ -107,7 +107,7 @@ public class QueryService extends QueryServiceGrpc.QueryServiceImplBase {
             responseObserver.onNext(tradingAccount);
             responseObserver.onCompleted();
         }).exceptionally(exception -> {
-            log.warn("[queryInvestorPosition] 交易账户查询异常", exception);
+            log.warn("[queryTradingAccount] 交易账户查询异常", exception);
             responseObserver.onError(exception);
             return null;
         });
@@ -125,7 +125,7 @@ public class QueryService extends QueryServiceGrpc.QueryServiceImplBase {
             responseObserver.onNext(futureData);
             responseObserver.onCompleted();
         }).exceptionally(exception -> {
-            log.warn("[queryInvestorPosition] 行情数据查询异常", exception);
+            log.warn("[queryDepthMarketData] 行情数据查询异常", exception);
             responseObserver.onError(exception);
             return null;
         });
