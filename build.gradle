@@ -53,7 +53,8 @@ dependencies {
   // Jupiter依赖
   implementation 'com.github.JupiterFund:jupiter-commons:master-SNAPSHOT'
   implementation 'com.github.JupiterFund:jupiterapis:master-SNAPSHOT'
-  implementation 'com.github.JupiterFund:ctpapi:v6.3.15:all'
+  // 专用于穿透测试，常见API版本为6.3.13
+  implementation 'com.github.JupiterFund:ctpapi:v6.3.13:all'
   // TDF和QTS依赖也需要，因为代码中使用了DatastreamMapper
   implementation 'com.github.JupiterFund:tdfapi:v1.2.0:all'
   implementation 'com.github.JupiterFund:qtsapi:v2.6.0:all'
