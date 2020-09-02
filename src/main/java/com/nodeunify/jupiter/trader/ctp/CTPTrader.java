@@ -79,6 +79,7 @@ public class CTPTrader {
     public void start() {
         // CTP API必须在这个方法中被初始化，不能放在PostConstruct方法里。
         // 因为CTP API要求挂起主线程，会导致SpringBoot应用无法完全启动。
+        log.info("[start] CTP接口版本:{}", CTPTraderApi.getApiVersion());
         CThostFtdcTraderSpi spiAdapter = new CTPTraderSpiAdapter(traderSpi);
         traderApi.registerSpi(spiAdapter);
         traderApi.registerFront(ctpTradeAddress);
