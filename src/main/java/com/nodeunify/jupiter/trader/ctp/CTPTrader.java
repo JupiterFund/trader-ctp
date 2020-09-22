@@ -71,7 +71,8 @@ public class CTPTrader {
     void handleCTPTraderEvent(CTPTraderEvent event) {
         if ("onFrontReconnected".equals(event.getSource())) {
             log.debug("[handleCTPTraderEvent] 交易前置已重连，用户重新登录");
-            login();
+            // bug #1
+            authenticate().thenCompose(nil -> login());
         }
         
     }
