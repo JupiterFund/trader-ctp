@@ -70,8 +70,8 @@ public class CTPTrader {
     @EventListener
     void handleCTPTraderEvent(CTPTraderEvent event) {
         if ("onFrontReconnected".equals(event.getSource())) {
-            log.debug("[handleCTPTraderEvent] 交易前置已重连，用户重新登录");
-            login();
+            log.debug("[handleCTPTraderEvent] 交易前置已重连，用户重新认证登录");
+            authenticate().thenCompose(nil -> login());
         }
         
     }
@@ -79,6 +79,7 @@ public class CTPTrader {
     public void start() {
         // CTP API必须在这个方法中被初始化，不能放在PostConstruct方法里。
         // 因为CTP API要求挂起主线程，会导致SpringBoot应用无法完全启动。
+        log.info("[start] CTP接口版本:{}", CTPTraderApi.getApiVersion());
         CThostFtdcTraderSpi spiAdapter = new CTPTraderSpiAdapter(traderSpi);
         traderApi.registerSpi(spiAdapter);
         traderApi.registerFront(ctpTradeAddress);

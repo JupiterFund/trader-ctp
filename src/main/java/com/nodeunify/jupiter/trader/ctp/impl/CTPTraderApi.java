@@ -58,6 +58,10 @@ public class CTPTraderApi {
         return new CTPTraderApi(cThostFtdcTraderApi);
     }
 
+    public static String getApiVersion() {
+        return CThostFtdcTraderApi.GetApiVersion();
+    }
+
     public void registerFront(String pszFrontAddress) {
         traderApi.RegisterFront(pszFrontAddress);
     }
