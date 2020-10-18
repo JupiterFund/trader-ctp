@@ -15,6 +15,8 @@ import ctp.thosttraderapi.CThostFtdcInvestorPositionDetailField;
 import ctp.thosttraderapi.CThostFtdcInvestorPositionField;
 import ctp.thosttraderapi.CThostFtdcOrderActionField;
 import ctp.thosttraderapi.CThostFtdcOrderField;
+import ctp.thosttraderapi.CThostFtdcParkedOrderActionField;
+import ctp.thosttraderapi.CThostFtdcParkedOrderField;
 import ctp.thosttraderapi.CThostFtdcQryDepthMarketDataField;
 import ctp.thosttraderapi.CThostFtdcQryInstrumentField;
 import ctp.thosttraderapi.CThostFtdcQryInvestorPositionDetailField;
@@ -23,6 +25,8 @@ import ctp.thosttraderapi.CThostFtdcQryOrderField;
 import ctp.thosttraderapi.CThostFtdcQrySettlementInfoField;
 import ctp.thosttraderapi.CThostFtdcQryTradeField;
 import ctp.thosttraderapi.CThostFtdcQryTradingAccountField;
+import ctp.thosttraderapi.CThostFtdcRemoveParkedOrderActionField;
+import ctp.thosttraderapi.CThostFtdcRemoveParkedOrderField;
 import ctp.thosttraderapi.CThostFtdcReqAuthenticateField;
 import ctp.thosttraderapi.CThostFtdcReqUserLoginField;
 import ctp.thosttraderapi.CThostFtdcRspAuthenticateField;
@@ -367,5 +371,41 @@ public class CTPTraderApi {
         return CompletableFuture
             .anyOf(successFuture, errorFuture)
             .thenApply(object -> (CThostFtdcOrderActionField) object);
+    }
+
+    public void reqParkedOrderInsert(CThostFtdcParkedOrderField pParkedOrder) {
+        int requestID = ctpRequestManager.getAndIncrementRequestID();
+        reqParkedOrderInsert(pParkedOrder, requestID);
+    }
+
+    public void reqParkedOrderInsert(CThostFtdcParkedOrderField pParkedOrder, int nRequestID) {
+        traderApi.ReqParkedOrderInsert(pParkedOrder, nRequestID);
+    }
+
+    public void reqParkedOrderAction(CThostFtdcParkedOrderActionField pParkedOrderAction) {
+        int requestID = ctpRequestManager.getAndIncrementRequestID();
+        reqParkedOrderAction(pParkedOrderAction, requestID);
+    }
+
+    public void reqParkedOrderAction(CThostFtdcParkedOrderActionField pParkedOrderAction, int nRequestID) {
+        traderApi.ReqParkedOrderAction(pParkedOrderAction, nRequestID);
+    }
+
+    public void reqRemoveParkedOrder(CThostFtdcRemoveParkedOrderField pRemoveParkedOrder) {
+        int requestID = ctpRequestManager.getAndIncrementRequestID();
+        traderApi.ReqRemoveParkedOrder(pRemoveParkedOrder, requestID);
+    }
+
+    public void reqRemoveParkedOrder(CThostFtdcRemoveParkedOrderField pRemoveParkedOrder, int nRequestID) {
+        traderApi.ReqRemoveParkedOrder(pRemoveParkedOrder, nRequestID);
+    }
+
+    public void reqRemoveParkedOrderAction(CThostFtdcRemoveParkedOrderActionField pRemoveParkedOrderAction) {
+        int requestID = ctpRequestManager.getAndIncrementRequestID();
+        traderApi.ReqRemoveParkedOrderAction(pRemoveParkedOrderAction, requestID);
+    }
+
+    public void reqRemoveParkedOrderAction(CThostFtdcRemoveParkedOrderActionField pRemoveParkedOrderAction, int nRequestID) {
+        traderApi.ReqRemoveParkedOrderAction(pRemoveParkedOrderAction, nRequestID);
     }
 }

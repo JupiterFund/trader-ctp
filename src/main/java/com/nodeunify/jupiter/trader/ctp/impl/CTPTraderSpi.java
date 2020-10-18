@@ -22,6 +22,10 @@ import ctp.thosttraderapi.CThostFtdcInvestorPositionDetailField;
 import ctp.thosttraderapi.CThostFtdcInvestorPositionField;
 import ctp.thosttraderapi.CThostFtdcOrderActionField;
 import ctp.thosttraderapi.CThostFtdcOrderField;
+import ctp.thosttraderapi.CThostFtdcParkedOrderActionField;
+import ctp.thosttraderapi.CThostFtdcParkedOrderField;
+import ctp.thosttraderapi.CThostFtdcRemoveParkedOrderActionField;
+import ctp.thosttraderapi.CThostFtdcRemoveParkedOrderField;
 import ctp.thosttraderapi.CThostFtdcRspAuthenticateField;
 import ctp.thosttraderapi.CThostFtdcRspInfoField;
 import ctp.thosttraderapi.CThostFtdcRspUserLoginField;
@@ -651,6 +655,58 @@ public class CTPTraderSpi {
         
         String uuid = ctpRequestManager.lookupUUID(Integer.parseInt(pTrade.getOrderRef()));
         kafkaProducer.sendReturnTrade(uuid, pTrade);
+    }
+
+    /**
+     * 预埋单录入应答。
+     * 
+     * @param pParkedOrder
+     * @param pRspInfo
+     * @param nRequestID
+     * @param bIsLast
+     */
+    public void onRspParkedOrderInsert(CThostFtdcParkedOrderField pParkedOrder, CThostFtdcRspInfoField pRspInfo, int nRequestID, 
+            boolean bIsLast) {
+
+    }
+
+    /**
+     * 预埋单操作应答。
+     * 
+     * @param pParkedOrderAction
+     * @param pRspInfo
+     * @param nRequestID
+     * @param bIsLast
+     */
+    public void onRspParkedOrderAction(CThostFtdcParkedOrderActionField pParkedOrderAction, CThostFtdcRspInfoField pRspInfo, int nRequestID, 
+            boolean bIsLast) {
+
+    }
+
+    /**
+     * 撤销预埋单应答。
+     * 
+     * @param pRemoveParkedOrder
+     * @param pRspInfo
+     * @param nRequestID
+     * @param bIsLast
+     */
+    public void onRspRemoveParkedOrder(CThostFtdcRemoveParkedOrderField pRemoveParkedOrder, CThostFtdcRspInfoField pRspInfo, int nRequestID, 
+            boolean bIsLast) {
+
+    }
+
+    /**
+     * 撤销预埋撤单应答。
+     * 
+     * @param pRemoveParkedOrderAction
+     * @param pRspInfo
+     * @param nRequestID
+     * @param bIsLast
+     */
+    public void onRspRemoveParkedOrderAction(CThostFtdcRemoveParkedOrderActionField pRemoveParkedOrderAction, CThostFtdcRspInfoField pRspInfo, int nRequestID, 
+            boolean bIsLast) {
+
     }
 
     ////////////////////////////////////////////////////////////////////////////
