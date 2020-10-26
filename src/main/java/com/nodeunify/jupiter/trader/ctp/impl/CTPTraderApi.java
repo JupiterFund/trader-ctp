@@ -106,13 +106,15 @@ public class CTPTraderApi {
         return listener;
     }
 
+
     public CompletableFuture<CThostFtdcRspAuthenticateField> reqAuthenticate(CThostFtdcReqAuthenticateField pReqAuthenticate) {
         int requestID = ctpRequestManager.getAndIncrementRequestID();
         CompletableFuture<CThostFtdcRspAuthenticateField> listener = new CompletableFuture<>();
         ctpRequestManager.addListener(requestID, listener);
 
-        if (traderApi.ReqAuthenticate(pReqAuthenticate, requestID) != 0) {
-            log.error("[reqAuthenticate] 发送认证请求失败");
+        int ret = traderApi.ReqAuthenticate(pReqAuthenticate, requestID);
+        if (ret != 0) {
+            log.error("[reqAuthenticate] 发送认证请求失败. 失败返回代码:{}", ret);
         } else {
             log.info("[reqAuthenticate] 发送认证请求成功");
         }
@@ -126,8 +128,14 @@ public class CTPTraderApi {
         ctpRequestManager.addListener(requestID, listener);
 
         String userInfo = "BorkerID=" + pReqUserLogin.getBrokerID() + ",UserID=" + pReqUserLogin.getUserID();
-        if (traderApi.ReqUserLogin(pReqUserLogin, requestID) != 0) {
-            log.error("[reqUserLogin] 发送登录请求失败. 用户信息:{}", userInfo);
+        // 返回值：
+        // 0，代表成功
+        // -1，表示网络连接失败
+        // -2，表示未处理请求超过许可数
+        // -3，表示每秒发送请求数超过许可数。
+        int ret = traderApi.ReqUserLogin(pReqUserLogin, requestID);
+        if (ret != 0) {
+            log.error("[reqUserLogin] 发送登录请求失败. 用户信息:{}. 失败返回代码:{}", userInfo, ret);
         } else {
             log.info("[reqUserLogin] 发送登录请求成功. 用户信息:{}", userInfo);
         }
@@ -146,8 +154,9 @@ public class CTPTraderApi {
         ctpRequestManager.addListener(requestID, listener);
 
         String userInfo = "BorkerID=" + pReqUserLogout.getBrokerID() + ",UserID=" + pReqUserLogout.getUserID();
-        if (traderApi.ReqUserLogout(pReqUserLogout, requestID) != 0) {
-            log.error("[reqUserLogin] 发送登录请求失败. 用户信息:{}", userInfo);
+        int ret = traderApi.ReqUserLogout(pReqUserLogout, requestID);
+        if (ret != 0) {
+            log.error("[reqUserLogin] 发送登录请求失败. 用户信息:{}. 失败返回代码:{}", userInfo, ret);
         } else {
             log.info("[reqUserLogin] 发送登录请求成功. 用户信息:{}", userInfo);
         }
@@ -169,8 +178,9 @@ public class CTPTraderApi {
         CompletableFuture<CThostFtdcSettlementInfoField> listener = new CompletableFuture<>();
         ctpRequestManager.addListener(nRequestID, listener);
 
-        if (traderApi.ReqQrySettlementInfo(pQrySettlementInfo, nRequestID) != 0) {
-            log.error("[reqQrySettlementInfo] 发送查询投资者结算结果请求失败");
+        int ret = traderApi.ReqQrySettlementInfo(pQrySettlementInfo, nRequestID);
+        if (ret != 0) {
+            log.error("[reqQrySettlementInfo] 发送查询投资者结算结果请求失败. 失败返回代码:{}", ret);
             listener.completeExceptionally(new RuntimeException("发送查询投资者结算结果请求失败"));
         } else {
             log.info("[reqQrySettlementInfo] 发送查询投资者结算结果请求成功");
@@ -188,8 +198,9 @@ public class CTPTraderApi {
         CompletableFuture<CThostFtdcSettlementInfoConfirmField> listener = new CompletableFuture<>();
         ctpRequestManager.addListener(nRequestID, listener);
 
-        if (traderApi.ReqSettlementInfoConfirm(pSettlementInfoConfirm, nRequestID) != 0) {
-            log.error("[reqSettlementInfoConfirm] 发送确认投资者结算结果请求失败");
+        int ret = traderApi.ReqSettlementInfoConfirm(pSettlementInfoConfirm, nRequestID);
+        if (ret != 0) {
+            log.error("[reqSettlementInfoConfirm] 发送确认投资者结算结果请求失败. 失败返回代码:{}", ret);
             listener.completeExceptionally(new RuntimeException("发送确认投资者结算结果请求失败"));
         } else {
             log.info("[reqSettlementInfoConfirm] 发送确认投资者结算结果请求成功");
@@ -207,8 +218,9 @@ public class CTPTraderApi {
         CompletableFuture<List<CThostFtdcInvestorPositionField>> listener = new CompletableFuture<>();
         ctpRequestManager.addListener(nRequestID, listener);
 
-        if (traderApi.ReqQryInvestorPosition(pQryInvestorPosition, nRequestID) != 0) {
-            log.error("[reqQryInvestorPosition] 发送持仓查询请求失败");
+        int ret = traderApi.ReqQryInvestorPosition(pQryInvestorPosition, nRequestID);
+        if (ret != 0) {
+            log.error("[reqQryInvestorPosition] 发送持仓查询请求失败. 失败返回代码:{}", ret);
             listener.completeExceptionally(new RuntimeException("发送持仓查询请求失败"));
         } else {
             log.info("[reqQryInvestorPosition] 发送持仓查询请求成功");
@@ -226,8 +238,9 @@ public class CTPTraderApi {
         CompletableFuture<List<CThostFtdcInvestorPositionDetailField>> listener = new CompletableFuture<>();
         ctpRequestManager.addListener(nRequestID, listener);
 
-        if (traderApi.ReqQryInvestorPositionDetail(pQryInvestorPositionDetail, nRequestID) != 0) {
-            log.error("[reqQryInvestorPositionDetail] 发送持仓明细查询请求失败");
+        int ret = traderApi.ReqQryInvestorPositionDetail(pQryInvestorPositionDetail, nRequestID);
+        if (ret != 0) {
+            log.error("[reqQryInvestorPositionDetail] 发送持仓明细查询请求失败. 失败返回代码:{}", ret);
             listener.completeExceptionally(new RuntimeException("发送持仓明细查询请求失败"));
         } else {
             log.info("[reqQryInvestorPositionDetail] 发送持仓明细查询请求成功");
@@ -245,8 +258,9 @@ public class CTPTraderApi {
         CompletableFuture<CThostFtdcTradingAccountField> listener = new CompletableFuture<>();
         ctpRequestManager.addListener(nRequestID, listener);
 
-        if (traderApi.ReqQryTradingAccount(pQryTradingAccount, nRequestID) != 0) {
-            log.error("[reqQryTradingAccount] 发送请求失败");
+        int ret = traderApi.ReqQryTradingAccount(pQryTradingAccount, nRequestID);
+        if (ret != 0) {
+            log.error("[reqQryTradingAccount] 发送请求失败. 失败返回代码:{}", ret);
             listener.completeExceptionally(new RuntimeException("发送请求失败"));
         } else {
             log.info("[reqQryTradingAccount] 发送请求成功");
@@ -264,8 +278,9 @@ public class CTPTraderApi {
         CompletableFuture<CThostFtdcInstrumentField> listener = new CompletableFuture<>();
         ctpRequestManager.addListener(nRequestID, listener);
 
-        if (traderApi.ReqQryInstrument(pQryInstrument, nRequestID) != 0) {
-            log.error("[reqQryInstrument] 发送查询合约请求失败");
+        int ret = traderApi.ReqQryInstrument(pQryInstrument, nRequestID);
+        if (ret != 0) {
+            log.error("[reqQryInstrument] 发送查询合约请求失败. 失败返回代码:{}", ret);
             listener.completeExceptionally(new RuntimeException("发送查询合约请求失败"));
         } else {
             log.info("[reqQryInstrument] 发送查询合约请求成功");
@@ -283,8 +298,9 @@ public class CTPTraderApi {
         CompletableFuture<CThostFtdcDepthMarketDataField> listener = new CompletableFuture<>();
         ctpRequestManager.addListener(nRequestID, listener);
 
-        if (traderApi.ReqQryDepthMarketData(pQryDepthMarketData, nRequestID) != 0) {
-            log.error("[reqQryDepthMarketData] 发送查询行情数据请求失败");
+        int ret = traderApi.ReqQryDepthMarketData(pQryDepthMarketData, nRequestID);
+        if (ret != 0) {
+            log.error("[reqQryDepthMarketData] 发送查询行情数据请求失败. 失败返回代码:{}", ret);
             listener.completeExceptionally(new RuntimeException("发送查询行情数据请求失败"));
         } else {
             log.info("[reqQryDepthMarketData] 发送查询行情数据请求成功");
@@ -302,8 +318,9 @@ public class CTPTraderApi {
         CompletableFuture<CThostFtdcOrderField> listener = new CompletableFuture<>();
         ctpRequestManager.addListener(nRequestID, listener);
 
-        if (traderApi.ReqQryOrder(pQryOrder, nRequestID) != 0) {
-            log.error("[reqQryOrder] 发送报单查询请求失败");
+        int ret = traderApi.ReqQryOrder(pQryOrder, nRequestID);
+        if (ret != 0) {
+            log.error("[reqQryOrder] 发送报单查询请求失败. 失败返回代码:{}", ret);
             listener.completeExceptionally(new RuntimeException("发送报单查询请求失败"));
         } else {
             log.info("[reqQryOrder] 发送报单查询请求成功");
@@ -321,8 +338,9 @@ public class CTPTraderApi {
         CompletableFuture<CThostFtdcTradeField> listener = new CompletableFuture<>();
         ctpRequestManager.addListener(nRequestID, listener);
 
-        if (traderApi.ReqQryTrade(pQryTrade, nRequestID) != 0) {
-            log.error("[reqQryTrade] 发送请求失败");
+        int ret = traderApi.ReqQryTrade(pQryTrade, nRequestID);
+        if (ret != 0) {
+            log.error("[reqQryTrade] 发送请求失败. 失败返回代码:{}", ret);
             listener.completeExceptionally(new RuntimeException("发送成交单查询请求失败"));
         } else {
             log.info("[reqQryTrade] 发送请求成功");
@@ -341,8 +359,10 @@ public class CTPTraderApi {
         ctpRequestManager.addOrderRefListener(nRequestID, successFuture);
         CompletableFuture<CThostFtdcInputOrderField> errorFuture = new CompletableFuture<>();
         ctpRequestManager.addListener(nRequestID, errorFuture);
-        if (traderApi.ReqOrderInsert(pInputOrder, nRequestID) != 0) {
-            log.error("[reqOrderInsert] 发送报单请求失败");
+
+        int ret = traderApi.ReqOrderInsert(pInputOrder, nRequestID);
+        if (ret != 0) {
+            log.error("[reqOrderInsert] 发送报单请求失败. 失败返回代码:{}", ret);
         } else {
             log.info("[reqOrderInsert] 发送报单请求成功");
         }
@@ -362,8 +382,10 @@ public class CTPTraderApi {
         ctpRequestManager.addOrderRefListener(nRequestID, successFuture);
         CompletableFuture<CThostFtdcInputOrderActionField> errorFuture = new CompletableFuture<>();
         ctpRequestManager.addListener(nRequestID, errorFuture);
-        if (traderApi.ReqOrderAction(pInputOrderAction, nRequestID) != 0) {
-            log.error("[reqOrderAction] 发送撤单请求失败");
+
+        int ret = traderApi.ReqOrderAction(pInputOrderAction, nRequestID);
+        if (ret != 0) {
+            log.error("[reqOrderAction] 发送撤单请求失败. 失败返回代码:{}", ret);
         } else {
             log.info("[reqOrderAction] 发送撤单请求成功");
         }

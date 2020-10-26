@@ -234,13 +234,14 @@ public class CTPTraderSpi {
         // InvestorPosition can be null if not found
         if (pInvestorPosition != null) {
             log.debug(
-                "[onRspQryInvestorPosition] 合约代码:{}; 交易所代码:{}; 经纪公司代码:{}; 投资者代码:{}; 多空方向:{}; 今日持仓:{}; 上日持仓:{}; 开仓量:{}; 平仓量:{}; 开仓金额:{}; 平仓金额:{}; 持仓成本:{}",
+                "[onRspQryInvestorPosition] 合约代码:{}; 交易所代码:{}; 经纪公司代码:{}; 投资者代码:{}; 持仓日期类型:{}; 多空方向:{}; 今日持仓:{}; 上日持仓:{}; 开仓量:{}; 平仓量:{}; 开仓金额:{}; 平仓金额:{}; 持仓成本:{}",
                 pInvestorPosition.getInstrumentID(), pInvestorPosition.getExchangeID(),
                 pInvestorPosition.getBrokerID(), pInvestorPosition.getInvestorID(),
-                pInvestorPosition.getPosiDirection(), pInvestorPosition.getPosition(),
-                pInvestorPosition.getYdPosition(), pInvestorPosition.getOpenVolume(),
-                pInvestorPosition.getCloseVolume(), pInvestorPosition.getOpenAmount(),
-                pInvestorPosition.getCloseAmount(), pInvestorPosition.getPositionCost());
+                pInvestorPosition.getPositionDate(), pInvestorPosition.getPosiDirection(), 
+                pInvestorPosition.getPosition(), pInvestorPosition.getYdPosition(), 
+                pInvestorPosition.getOpenVolume(), pInvestorPosition.getCloseVolume(), 
+                pInvestorPosition.getOpenAmount(), pInvestorPosition.getCloseAmount(), 
+                pInvestorPosition.getPositionCost());
 
             // 回调结果会被下一次回调覆盖. 临时解决办法:复制拷贝一份回调结果放入缓存
             CThostFtdcInvestorPositionField copy = new CThostFtdcInvestorPositionField();
