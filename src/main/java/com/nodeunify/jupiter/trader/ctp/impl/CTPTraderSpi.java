@@ -129,11 +129,13 @@ public class CTPTraderSpi {
     public void onRspUserLogin(CThostFtdcRspUserLoginField pRspUserLogin, CThostFtdcRspInfoField pRspInfo,
             int nRequestID, boolean isLast) {
         if (null != pRspInfo && pRspInfo.getErrorID() != 0) {
-            log.error("[onRspUserLogin] 交易服务器登录失败. 错误代码:{}; 错误消息:{}", pRspInfo.getErrorID(), pRspInfo.getErrorMsg());
+            log.error("[onRspUserLogin] 交易服务器登录失败. 错误代码:{}; 错误消息:{}", pRspInfo.getErrorID(), 
+                    pRspInfo.getErrorMsg());
         } else {
             log.info("[onRspUserLogin] 交易服务器登录成功");
-            log.info("[onRspUserLogin] 登录信息: FrontID={},SessionID={}", pRspUserLogin.getFrontID(),
-                    pRspUserLogin.getSessionID());
+            log.info("[onRspUserLogin] 登录信息: FrontID={},SessionID={},TradingDay={},MaxOrderRef={}", 
+                    pRspUserLogin.getFrontID(), pRspUserLogin.getSessionID(), pRspUserLogin.getTradingDay(),
+                    pRspUserLogin.getMaxOrderRef());
         }
 
         CompletableFuture<CThostFtdcRspUserLoginField> listener = (CompletableFuture<CThostFtdcRspUserLoginField>) ctpRequestManager
@@ -536,7 +538,7 @@ public class CTPTraderSpi {
         String orderSysID = pOrder.getOrderSysID();
         String orderRef = pOrder.getOrderRef();
         log.debug("[onRtnOrder] 报单标识号:{}; StatusMsg:{}; OrdeSubmitStatus:{}; OrderStatus:{}", orderID, statusMsg, ordeSubmitStatus, orderStatus);
-        orderRef = "88880";
+        // orderRef = "88880";
         CompletableFuture<CThostFtdcOrderField> listener = 
                 (CompletableFuture<CThostFtdcOrderField>) ctpRequestManager.getOrderRefListener(orderRef);
         switch (ordeSubmitStatus) {
@@ -655,7 +657,11 @@ public class CTPTraderSpi {
         log.info("[onRtnTrade] 报单编号{}已成交. 交易所代码:{}; 交易所交易员代码:{}; 成交单编号:{}", pTrade.getOrderSysID(), pTrade.getExchangeID(), pTrade.getTraderID(), pTrade.getTradeID());
         
         String uuid = ctpRequestManager.lookupUUID(Integer.parseInt(pTrade.getOrderRef()));
-        kafkaProducer.sendReturnTrade(uuid, pTrade);
+        try {
+            kafkaProducer.sendReturnTrade(uuid, pTrade);
+        } catch (Exception e) {
+            log.error("发送成交回调失败. 异常:{}", e);
+        }
     }
 
     /**
