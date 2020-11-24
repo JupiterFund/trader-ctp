@@ -8,10 +8,6 @@ import ctp.thosttraderapi.CThostFtdcInvestorPositionDetailField;
 import ctp.thosttraderapi.CThostFtdcInvestorPositionField;
 import ctp.thosttraderapi.CThostFtdcOrderActionField;
 import ctp.thosttraderapi.CThostFtdcOrderField;
-import ctp.thosttraderapi.CThostFtdcParkedOrderActionField;
-import ctp.thosttraderapi.CThostFtdcParkedOrderField;
-import ctp.thosttraderapi.CThostFtdcRemoveParkedOrderActionField;
-import ctp.thosttraderapi.CThostFtdcRemoveParkedOrderField;
 import ctp.thosttraderapi.CThostFtdcRspAuthenticateField;
 import ctp.thosttraderapi.CThostFtdcRspInfoField;
 import ctp.thosttraderapi.CThostFtdcRspUserLoginField;
@@ -100,7 +96,7 @@ public class CTPTraderSpiAdapter extends CThostFtdcTraderSpi {
     }
 
     @Override
-    public void OnRspQryDepthMarketData(CThostFtdcDepthMarketDataField pDepthMarketData,
+    public void OnRspQryDepthMarketData(CThostFtdcDepthMarketDataField pDepthMarketData, 
             CThostFtdcRspInfoField pRspInfo, int nRequestID, boolean bIsLast) {
         delegate.onRspQryDepthMarketData(pDepthMarketData, pRspInfo, nRequestID, bIsLast);
     }
@@ -147,30 +143,6 @@ public class CTPTraderSpiAdapter extends CThostFtdcTraderSpi {
     @Override
     public void OnRtnTrade(CThostFtdcTradeField pTrade) {
         delegate.onRtnTrade(pTrade);
-    }
-
-    @Override
-    public void OnRspParkedOrderInsert(CThostFtdcParkedOrderField pParkedOrder, CThostFtdcRspInfoField pRspInfo,
-            int nRequestID, boolean bIsLast) {
-        delegate.onRspParkedOrderInsert(pParkedOrder, pRspInfo, nRequestID, bIsLast);
-    }
-
-    @Override
-    public void OnRspParkedOrderAction(CThostFtdcParkedOrderActionField pParkedOrderAction,
-            CThostFtdcRspInfoField pRspInfo, int nRequestID, boolean bIsLast) {
-        delegate.onRspParkedOrderAction(pParkedOrderAction, pRspInfo, nRequestID, bIsLast);
-    }
-
-    @Override
-    public void OnRspRemoveParkedOrder(CThostFtdcRemoveParkedOrderField pRemoveParkedOrder, CThostFtdcRspInfoField pRspInfo, 
-            int nRequestID, boolean bIsLast) {
-        delegate.onRspRemoveParkedOrder(pRemoveParkedOrder, pRspInfo, nRequestID, bIsLast);
-    }
-
-    @Override
-    public void OnRspRemoveParkedOrderAction(CThostFtdcRemoveParkedOrderActionField pRemoveParkedOrderAction, 
-            CThostFtdcRspInfoField pRspInfo, int nRequestID, boolean bIsLast) {
-        delegate.onRspRemoveParkedOrderAction(pRemoveParkedOrderAction, pRspInfo, nRequestID, bIsLast);
     }
 
 }

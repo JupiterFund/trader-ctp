@@ -117,11 +117,9 @@ public class KafkaProducer {
 
     // trader.ctp.rtn.trade
     public void sendReturnTrade(String uuid, CThostFtdcTradeField tradeField) {
-        // TODO: 临时扩展日志，用于调错
-        log.debug("[send] Return trade: {}, {}", rtnTradeTopic, tradeField.getTradeID());
+        log.debug("[send] Return trade: {}", tradeField.getTradeID());
         Trade trade = TraderCTPMapper.MAPPER.map(tradeField);
         send(rtnTradeTopic, uuid, trade);
-        log.debug("[send] Kafka written: {}, {}", rtnTradeTopic, trade);
     }
 
     // trader.ctp.err.order.insert
