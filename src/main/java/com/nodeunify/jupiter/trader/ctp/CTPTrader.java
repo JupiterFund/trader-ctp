@@ -131,7 +131,6 @@ public class CTPTrader {
         qrySettlementInfoField.setInvestorID(investorId);
         qrySettlementInfoField.setAccountID(accountId);
         qrySettlementInfoField.setCurrencyID("CNY");
-        // TODO: set settlement as yesterday of the date from rspUserLoggedIn
         qrySettlementInfoField.setTradingDay("20200413");
         return traderApi.reqQrySettlementInfo(qrySettlementInfoField);
     }

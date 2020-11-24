@@ -22,10 +22,6 @@ import ctp.thosttraderapi.CThostFtdcInvestorPositionDetailField;
 import ctp.thosttraderapi.CThostFtdcInvestorPositionField;
 import ctp.thosttraderapi.CThostFtdcOrderActionField;
 import ctp.thosttraderapi.CThostFtdcOrderField;
-import ctp.thosttraderapi.CThostFtdcParkedOrderActionField;
-import ctp.thosttraderapi.CThostFtdcParkedOrderField;
-import ctp.thosttraderapi.CThostFtdcRemoveParkedOrderActionField;
-import ctp.thosttraderapi.CThostFtdcRemoveParkedOrderField;
 import ctp.thosttraderapi.CThostFtdcRspAuthenticateField;
 import ctp.thosttraderapi.CThostFtdcRspInfoField;
 import ctp.thosttraderapi.CThostFtdcRspUserLoginField;
@@ -129,13 +125,11 @@ public class CTPTraderSpi {
     public void onRspUserLogin(CThostFtdcRspUserLoginField pRspUserLogin, CThostFtdcRspInfoField pRspInfo,
             int nRequestID, boolean isLast) {
         if (null != pRspInfo && pRspInfo.getErrorID() != 0) {
-            log.error("[onRspUserLogin] 交易服务器登录失败. 错误代码:{}; 错误消息:{}", pRspInfo.getErrorID(), 
-                    pRspInfo.getErrorMsg());
+            log.error("[onRspUserLogin] 交易服务器登录失败. 错误代码:{}; 错误消息:{}", pRspInfo.getErrorID(), pRspInfo.getErrorMsg());
         } else {
             log.info("[onRspUserLogin] 交易服务器登录成功");
-            log.info("[onRspUserLogin] 登录信息: FrontID={},SessionID={},TradingDay={},MaxOrderRef={}", 
-                    pRspUserLogin.getFrontID(), pRspUserLogin.getSessionID(), pRspUserLogin.getTradingDay(),
-                    pRspUserLogin.getMaxOrderRef());
+            log.info("[onRspUserLogin] 登录信息: FrontID={},SessionID={}", pRspUserLogin.getFrontID(),
+                    pRspUserLogin.getSessionID());
         }
 
         CompletableFuture<CThostFtdcRspUserLoginField> listener = (CompletableFuture<CThostFtdcRspUserLoginField>) ctpRequestManager
@@ -236,14 +230,13 @@ public class CTPTraderSpi {
         // InvestorPosition can be null if not found
         if (pInvestorPosition != null) {
             log.debug(
-                "[onRspQryInvestorPosition] 合约代码:{}; 交易所代码:{}; 经纪公司代码:{}; 投资者代码:{}; 持仓日期类型:{}; 多空方向:{}; 今日持仓:{}; 上日持仓:{}; 开仓量:{}; 平仓量:{}; 开仓金额:{}; 平仓金额:{}; 持仓成本:{}",
+                "[onRspQryInvestorPosition] 合约代码:{}; 交易所代码:{}; 经纪公司代码:{}; 投资者代码:{}; 多空方向:{}; 今日持仓:{}; 上日持仓:{}; 开仓量:{}; 平仓量:{}; 开仓金额:{}; 平仓金额:{}; 持仓成本:{}",
                 pInvestorPosition.getInstrumentID(), pInvestorPosition.getExchangeID(),
                 pInvestorPosition.getBrokerID(), pInvestorPosition.getInvestorID(),
-                pInvestorPosition.getPositionDate(), pInvestorPosition.getPosiDirection(), 
-                pInvestorPosition.getPosition(), pInvestorPosition.getYdPosition(), 
-                pInvestorPosition.getOpenVolume(), pInvestorPosition.getCloseVolume(), 
-                pInvestorPosition.getOpenAmount(), pInvestorPosition.getCloseAmount(), 
-                pInvestorPosition.getPositionCost());
+                pInvestorPosition.getPosiDirection(), pInvestorPosition.getPosition(),
+                pInvestorPosition.getYdPosition(), pInvestorPosition.getOpenVolume(),
+                pInvestorPosition.getCloseVolume(), pInvestorPosition.getOpenAmount(),
+                pInvestorPosition.getCloseAmount(), pInvestorPosition.getPositionCost());
 
             // 回调结果会被下一次回调覆盖. 临时解决办法:复制拷贝一份回调结果放入缓存
             CThostFtdcInvestorPositionField copy = new CThostFtdcInvestorPositionField();
@@ -538,7 +531,7 @@ public class CTPTraderSpi {
         String orderSysID = pOrder.getOrderSysID();
         String orderRef = pOrder.getOrderRef();
         log.debug("[onRtnOrder] 报单标识号:{}; StatusMsg:{}; OrdeSubmitStatus:{}; OrderStatus:{}", orderID, statusMsg, ordeSubmitStatus, orderStatus);
-        // orderRef = "88880";
+        orderRef = "88880";
         CompletableFuture<CThostFtdcOrderField> listener = 
                 (CompletableFuture<CThostFtdcOrderField>) ctpRequestManager.getOrderRefListener(orderRef);
         switch (ordeSubmitStatus) {
@@ -657,63 +650,7 @@ public class CTPTraderSpi {
         log.info("[onRtnTrade] 报单编号{}已成交. 交易所代码:{}; 交易所交易员代码:{}; 成交单编号:{}", pTrade.getOrderSysID(), pTrade.getExchangeID(), pTrade.getTraderID(), pTrade.getTradeID());
         
         String uuid = ctpRequestManager.lookupUUID(Integer.parseInt(pTrade.getOrderRef()));
-        try {
-            kafkaProducer.sendReturnTrade(uuid, pTrade);
-        } catch (Exception e) {
-            log.error("发送成交回调失败. 异常:{}", e);
-        }
-    }
-
-    /**
-     * 预埋单录入应答。
-     * 
-     * @param pParkedOrder
-     * @param pRspInfo
-     * @param nRequestID
-     * @param bIsLast
-     */
-    public void onRspParkedOrderInsert(CThostFtdcParkedOrderField pParkedOrder, CThostFtdcRspInfoField pRspInfo, int nRequestID, 
-            boolean bIsLast) {
-
-    }
-
-    /**
-     * 预埋单操作应答。
-     * 
-     * @param pParkedOrderAction
-     * @param pRspInfo
-     * @param nRequestID
-     * @param bIsLast
-     */
-    public void onRspParkedOrderAction(CThostFtdcParkedOrderActionField pParkedOrderAction, CThostFtdcRspInfoField pRspInfo, int nRequestID, 
-            boolean bIsLast) {
-
-    }
-
-    /**
-     * 撤销预埋单应答。
-     * 
-     * @param pRemoveParkedOrder
-     * @param pRspInfo
-     * @param nRequestID
-     * @param bIsLast
-     */
-    public void onRspRemoveParkedOrder(CThostFtdcRemoveParkedOrderField pRemoveParkedOrder, CThostFtdcRspInfoField pRspInfo, int nRequestID, 
-            boolean bIsLast) {
-
-    }
-
-    /**
-     * 撤销预埋撤单应答。
-     * 
-     * @param pRemoveParkedOrderAction
-     * @param pRspInfo
-     * @param nRequestID
-     * @param bIsLast
-     */
-    public void onRspRemoveParkedOrderAction(CThostFtdcRemoveParkedOrderActionField pRemoveParkedOrderAction, CThostFtdcRspInfoField pRspInfo, int nRequestID, 
-            boolean bIsLast) {
-
+        kafkaProducer.sendReturnTrade(uuid, pTrade);
     }
 
     ////////////////////////////////////////////////////////////////////////////
