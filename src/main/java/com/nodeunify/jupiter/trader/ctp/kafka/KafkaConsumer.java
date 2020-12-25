@@ -10,7 +10,13 @@ import com.nodeunify.jupiter.trader.ctp.v1.OrderAction;
 
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.event.EventListener;
 import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.kafka.event.ConsumerFailedToStartEvent;
+import org.springframework.kafka.event.ConsumerStartedEvent;
+import org.springframework.kafka.event.ConsumerStartingEvent;
+import org.springframework.kafka.event.ListenerContainerIdleEvent;
+import org.springframework.kafka.event.NonResponsiveConsumerEvent;
 import org.springframework.stereotype.Component;
 
 import ctp.thosttraderapi.CThostFtdcInputOrderActionField;
@@ -82,5 +88,31 @@ public class KafkaConsumer {
             // TODO Auto-generated catch block
             e1.printStackTrace();
         }
+    }
+
+    // Debug codes for develop branch
+    @EventListener()
+    public void consumerStartingEvent(ConsumerStartingEvent event) {
+        log.debug("ConsumerStartingEvent: {}", event);
+    }
+
+    @EventListener()
+    public void consumerStartedEvent(ConsumerStartedEvent event) {
+        log.debug("ConsumerStartedEvent: {}", event);
+    }
+
+    @EventListener()
+    public void consumerFailedToStartEventHandler(ConsumerFailedToStartEvent event) {
+        log.debug("ConsumerFailedToStartEvent: {}", event);
+    }
+
+    @EventListener()
+    public void nonResponsiveConsumerEventHandler(NonResponsiveConsumerEvent event) {
+        log.debug("NonResponsiveConsumerEvent: {}", event);
+    }
+
+    @EventListener()
+    public void listenerContainerIdleEvent(ListenerContainerIdleEvent event) {
+        log.debug("ListenerContainerIdleEvent: {}", event);
     }
 }

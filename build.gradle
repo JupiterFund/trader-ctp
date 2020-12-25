@@ -3,7 +3,7 @@ import org.gradle.nativeplatform.platform.internal.DefaultNativePlatform
 plugins {
   id 'java'
   id 'application'
-  id 'org.springframework.boot' version '2.1.7.RELEASE'
+  id 'org.springframework.boot' version '2.2.0.RELEASE'
 }
 
 apply plugin: 'java'
@@ -34,7 +34,7 @@ dependencies {
   implementation 'io.github.lognet:grpc-spring-boot-starter:3.5.3'
   // 使用Log4j2 + Sl4j
   implementation 'org.springframework.boot:spring-boot-starter-log4j2'
-  implementation 'org.springframework.kafka:spring-kafka:2.2.5.RELEASE'
+  implementation 'org.springframework.kafka:spring-kafka:2.3.5.RELEASE'
   implementation 'org.apache.commons:commons-csv:1.6'
   // 异步日志
   implementation 'com.lmax:disruptor:3.3.6'
