@@ -650,7 +650,11 @@ public class CTPTraderSpi {
         log.info("[onRtnTrade] 报单编号{}已成交. 交易所代码:{}; 交易所交易员代码:{}; 成交单编号:{}", pTrade.getOrderSysID(), pTrade.getExchangeID(), pTrade.getTraderID(), pTrade.getTradeID());
         
         String uuid = ctpRequestManager.lookupUUID(Integer.parseInt(pTrade.getOrderRef()));
-        kafkaProducer.sendReturnTrade(uuid, pTrade);
+        try {
+            kafkaProducer.sendReturnTrade(uuid, pTrade);
+        } catch (Exception e) {
+            log.error("发送成交回调失败. 异常:{}", e);
+        }
     }
 
     ////////////////////////////////////////////////////////////////////////////
