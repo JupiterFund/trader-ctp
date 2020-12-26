@@ -23,6 +23,11 @@ Configuration:
       level: error
       AppenderRef:
         ref: LogToConsole
+    Logger:
+      - name: org.apache.kafka
+        level: info
+        AppenderRef:
+          - ref: Console_Appender
     AsyncLogger:
       - name: com.nodeunify.jupiter.trader.ctp
         level: debug

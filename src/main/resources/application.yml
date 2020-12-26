@@ -16,6 +16,7 @@ spring:
         linger.ms: 1
     consumer:
       group-id: trader-ctp
+      enable-auto-commit: false
       auto-offset-reset: latest
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.apache.kafka.common.serialization.ByteArrayDeserializer

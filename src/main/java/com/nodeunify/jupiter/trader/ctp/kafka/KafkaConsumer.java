@@ -33,6 +33,13 @@ public class KafkaConsumer {
     @Autowired
     private CTPRequestManager ctpRequestManager;
 
+    /**
+     * 订阅合约查询请求
+     * 
+     * 如未指定groupId，默认使用listenerId作为groupId，并始终保持不变
+     * 
+     * @param record
+     */
     @KafkaListener(id = "queryInstrumentListner", topics = "${spring.kafka.topic.trader.ctp.qry.instrument}", autoStartup = "false")
     public void listenQueryInstrument(ConsumerRecord<String, byte[]> record) {
         try {
@@ -48,7 +55,14 @@ public class KafkaConsumer {
         }
     }
 
-    @KafkaListener(id = "orderInsertListner", topics = "${spring.kafka.topic.trader.ctp.order.insert}", autoStartup = "false")
+    /**
+     * 订阅报单请求
+     * 
+     * 强制动态随机生成groupId覆盖配置文件中的groupId
+     * 
+     * @param record
+     */
+    @KafkaListener(id = "orderInsertListner", groupId = "#{ T(java.util.UUID).randomUUID().toString() }", topics = "${spring.kafka.topic.trader.ctp.order.insert}", autoStartup = "false")
     public void listenOrderInsert(ConsumerRecord<String, byte[]> record) {
         try {
             Order order = Order.parseFrom(record.value());
@@ -69,7 +83,14 @@ public class KafkaConsumer {
         }
     }
 
-    @KafkaListener(id = "orderActionListener", topics = "${spring.kafka.topic.trader.ctp.order.action}", autoStartup = "false")
+    /**
+     * 订阅撤单请求
+     * 
+     * 强制动态随机生成groupId覆盖配置文件中的groupId
+     * 
+     * @param record
+     */
+    @KafkaListener(id = "orderActionListener", groupId = "#{ T(java.util.UUID).randomUUID().toString() }", topics = "${spring.kafka.topic.trader.ctp.order.action}", autoStartup = "false")
     public void listenOrderAction(ConsumerRecord<String, byte[]> record) {
         try {
             OrderAction orderAction = OrderAction.parseFrom(record.value());
@@ -90,7 +111,7 @@ public class KafkaConsumer {
         }
     }
 
-    // Debug codes for develop branch
+    // 临时调试代码。实时输出kafka客户端状态。检查未正确订阅主题的原因。
     @EventListener()
     public void consumerStartingEvent(ConsumerStartingEvent event) {
         log.debug("ConsumerStartingEvent: {}", event);

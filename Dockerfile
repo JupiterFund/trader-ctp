@@ -15,7 +15,7 @@ RUN gradle build copy bootJar --no-daemon
 
 FROM $base_image
 
-ARG trader_ctp_version=0.3.2
+ARG trader_ctp_version=0.3.3
 
 ENV LD_LIBRARY_PATH /app
 ENV JASYPT_ENCRYPTOR_PASSWORD default
