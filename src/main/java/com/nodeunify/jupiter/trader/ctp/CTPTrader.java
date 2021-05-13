@@ -95,7 +95,9 @@ public class CTPTrader {
                 registry.getAllListenerContainers()
                     .parallelStream()
                     .forEach(listener -> listener.start());
-            });
+            })
+            .join();
+        
         log.info("[start] CTP接口异步连接中，主进程挂起");
         traderApi.join();
         // 不要在traderAPI以外的地方使用swig object，有异步时效性，容易造成错误。
