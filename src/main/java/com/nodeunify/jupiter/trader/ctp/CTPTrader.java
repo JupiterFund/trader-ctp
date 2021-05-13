@@ -64,6 +64,7 @@ public class CTPTrader {
 
     @PreDestroy
     public void preDestroy() {
+        log.info("[preDestroy] 登出并销毁连接");
         logout().thenComposeAsync(nil -> traderApi.release());
     }
 
